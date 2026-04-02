@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls /Users/joel/Documents/ecommerce/generated/prisma/index*)",
+      "Bash(npm info:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx next:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx shadcn@latest add input label card)",
+      "Bash(npx tsx:*)",
+      "Bash(npx auth:*)",
+      "Bash(openssl rand:*)",
+      "Bash(curl:*)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(rm -f /tmp/auth_cookies /tmp/bad_cookies)",
+      "Bash(npx shadcn@latest add separator badge tabs textarea switch avatar dropdown-menu tooltip sheet)",
+      "Bash(node:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

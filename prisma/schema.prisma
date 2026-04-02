@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum DomainStatus {
+  UNVERIFIED
+  VERIFIED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+// ─── Tenant ─────────────────────────────────────────────────
+
+model Tenant {
+  id                     String       @id @default(cuid())
+  name                   String
+  slug                   String       @unique
+  customDomain           String?      @unique
+  domainStatus           DomainStatus @default(UNVERIFIED)
+  logoUrl                String?
+  description            String?
+  currency               String       @default("GHS")
+  contactEmail           String?
+  contactPhone           String?
+  address                String?
+
+  // Paystack
+  paystackSubaccountCode String?
+
+  // Notification settings
+  emailEnabled           Boolean      @default(true)
+  smsEnabled             Boolean      @default(false)
+  arkeselApiKey          String?
+
+  // Theme
+  primaryColor           String       @default("#000000")
+  accentColor            String       @default("#3B82F6")
+
+  // Relations
+  users                  User[]
+  products               Product[]
+  categories             Category[]
+  orders                 Order[]
+  customers              Customer[]
+  deliveryZones          DeliveryZone[]
+  discounts              Discount[]
+
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+}
+
+// ─── User ───────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  role         Role     @default(OWNER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+// ─── Category ───────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  name        String
+  slug        String
+  description String?
+  imageUrl    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// ─── Product ────────────────────────────────────────────────
+
+model Product {
+  id             String           @id @default(cuid())
+  tenantId       String
+  tenant         Tenant           @relation(fields: [tenantId], references: [id])
+  name           String
+  slug           String
+  description    String?
+  price          Decimal          @db.Decimal(10, 2)
+  compareAtPrice Decimal?         @db.Decimal(10, 2)
+  sku            String?
+  stock          Int              @default(0)
+  trackStock     Boolean          @default(true)
+  isPublished    Boolean          @default(false)
+  isArchived     Boolean          @default(false)
+  categoryId     String?
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  variants       ProductVariant[]
+  orderItems     OrderItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, isPublished])
+}
+
+// ─── ProductImage ───────────────────────────────────────────
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// ─── ProductVariant ─────────────────────────────────────────
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  sku       String?
+  price     Decimal  @db.Decimal(10, 2)
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Customer ───────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  email     String
+  name      String
+  phone     String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+// ─── Order ──────────────────────────────────────────────────
+
+model Order {
+  id              String        @id @default(cuid())
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+  orderNumber     String
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+  subtotal        Decimal       @db.Decimal(10, 2)
+  deliveryFee     Decimal       @db.Decimal(10, 2) @default(0)
+  discountAmount  Decimal       @db.Decimal(10, 2) @default(0)
+  total           Decimal       @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paymentRef      String?
+  deliveryZoneId  String?
+  deliveryZone    DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  discountId      String?
+  discount        Discount?     @relation(fields: [discountId], references: [id])
+  deliveryAddress String?
+  customerNote    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+// ─── OrderItem ──────────────────────────────────────────────
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  variantId String?
+  name      String
+  price     Decimal  @db.Decimal(10, 2)
+  quantity  Int
+  createdAt DateTime @default(now())
+}
+
+// ─── DeliveryZone ───────────────────────────────────────────
+
+model DeliveryZone {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  regions   String
+  fee       Decimal  @db.Decimal(10, 2)
+  isActive  Boolean  @default(true)
+  position  Int      @default(0)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+// ─── Discount ───────────────────────────────────────────────
+
+model Discount {
+  id          String       @id @default(cuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  code        String
+  type        DiscountType
+  value       Decimal      @db.Decimal(10, 2)
+  minPurchase Decimal?     @db.Decimal(10, 2)
+  maxUses     Int?
+  usedCount   Int          @default(0)
+  isActive    Boolean      @default(true)
+  startsAt    DateTime     @default(now())
+  expiresAt   DateTime?
+  orders      Order[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}

@@ -1,19 +1,40 @@
-import { Button } from "@/components/ui/button"
+import { hasTenantContext, getCurrentTenant } from "@/lib/tenant";
+import type { Tenant } from "@/types";
 
-export default function Page() {
-  return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
-  )
+// ─── Per-store homepage registry ──────────────────────────────────────────────
+// To add a homepage for a new store:
+//   1. Copy stores/_template/ → stores/<slug>/
+//   2. Customise the sections and page.tsx to match the brand
+//   3. Add one line to STORE_PAGES below (slug → exported page component)
+
+import { FreshMartPage } from "@/stores/fresh-mart/page";
+import { StyleHubGhPage } from "@/stores/stylehub-gh/page";
+import { TemplatePage } from "@/stores/_template/page";
+
+type HomepageComponent = (props: { tenant: Tenant }) => Promise<React.ReactNode> | React.ReactNode;
+
+const STORE_PAGES: Record<string, HomepageComponent> = {
+  "fresh-mart": FreshMartPage,
+  "stylehub-gh": StyleHubGhPage,
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
+export default async function HomePage() {
+  const isTenant = await hasTenantContext();
+
+  if (!isTenant) {
+    return (
+      <main className="flex min-h-svh flex-col items-center justify-center p-6">
+        <h1 className="text-3xl font-bold">Multi-Tenant Ecommerce Platform</h1>
+        <p className="mt-2 text-muted-foreground">
+          Powering online stores across Ghana.
+        </p>
+      </main>
+    );
+  }
+
+  const tenant = await getCurrentTenant();
+  const Page = STORE_PAGES[tenant.slug] ?? TemplatePage;
+
+  return <Page tenant={tenant} />;
 }

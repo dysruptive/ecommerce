@@ -1,0 +1,18 @@
+export type {
+  Tenant,
+  User,
+  Category,
+  Product,
+  ProductImage,
+  ProductVariant,
+  Customer,
+  Order,
+  OrderItem,
+  DeliveryZone,
+  Discount,
+  Role,
+  DomainStatus,
+  OrderStatus,
+  PaymentStatus,
+  DiscountType,
+} from "@/generated/prisma/client";

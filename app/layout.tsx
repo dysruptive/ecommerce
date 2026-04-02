@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google"
 
 import "./globals.css"
@@ -10,6 +11,14 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: {
+    default: "Multi-Tenant Ecommerce Platform",
+    template: "%s | Store",
+  },
+  description: "Powering 10 online stores across Ghana.",
+};
 
 export default function RootLayout({
   children,
