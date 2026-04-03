@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect, useActionState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
@@ -13,9 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ImageUpload,
   type UploadedImage,
 } from "@/components/dashboard/image-upload";
+import { createCategoryInline } from "@/actions/categories";
 
 interface Category {
   id: string;
@@ -74,6 +81,12 @@ export function ProductForm({
 }: ProductFormProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(action, null);
+  const [categoryList, setCategoryList] = useState<Category[]>(categories);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(product?.categoryId ?? "");
+  const [newCatOpen, setNewCatOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [isCreatingCat, startCatTransition] = useTransition();
+  const newCatInputRef = useRef<HTMLInputElement>(null);
 
   const [images, setImages] = useState<UploadedImage[]>(
     product?.images?.map((img) => ({
@@ -103,6 +116,22 @@ export function ProductForm({
       toast.error(state.error);
     }
   }, [state, router, product]);
+
+  function handleCreateCategory() {
+    if (!newCatName.trim()) return;
+    startCatTransition(async () => {
+      const result = await createCategoryInline(newCatName.trim());
+      if (result.success) {
+        setCategoryList((prev) => [...prev, result.category].sort((a, b) => a.name.localeCompare(b.name)));
+        setSelectedCategoryId(result.category.id);
+        setNewCatOpen(false);
+        setNewCatName("");
+        toast.success(`"${result.category.name}" created.`);
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
 
   function addVariant() {
     setVariants((prev) => [...prev, emptyVariant()]);
@@ -233,13 +262,24 @@ export function ProductForm({
         <div className={cardHeader}><p className={cardTitle}>Organization</p></div>
         <div className={`${cardBody} space-y-4`}>
           <div className="space-y-1.5">
-            <label className={labelCls} htmlFor="categoryId">Category</label>
-            <Select name="categoryId" defaultValue={product?.categoryId ?? ""}>
+            <div className="flex items-center justify-between">
+              <label className={labelCls}>Category</label>
+              <button
+                type="button"
+                onClick={() => { setNewCatOpen(true); setTimeout(() => newCatInputRef.current?.focus(), 50); }}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[#B45309] hover:underline underline-offset-2"
+              >
+                <Plus className="h-3 w-3" />
+                New category
+              </button>
+            </div>
+            <input type="hidden" name="categoryId" value={selectedCategoryId} />
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
               <SelectTrigger className="h-10 rounded-lg border-[#E5E2DB] bg-white text-sm text-[#1C1917] focus:ring-[#B45309]/20">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent className="border-[#E5E2DB]">
-                {categories.map((cat) => (
+                {categoryList.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id} className="text-sm focus:bg-[#FEF3C7] focus:text-[#92400E]">
                     {cat.name}
                   </SelectItem>
@@ -247,6 +287,41 @@ export function ProductForm({
               </SelectContent>
             </Select>
           </div>
+
+          <Dialog open={newCatOpen} onOpenChange={setNewCatOpen}>
+            <DialogContent className="border-[#E5E2DB] bg-white sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="text-[#1C1917]">New Category</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <input
+                  ref={newCatInputRef}
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateCategory(); } }}
+                  placeholder="Category name"
+                  className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={isCreatingCat || !newCatName.trim()}
+                    onClick={handleCreateCategory}
+                    className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
+                  >
+                    {isCreatingCat ? "Creating..." : "Create"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setNewCatOpen(false); setNewCatName(""); }}
+                    className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#78716C] hover:bg-[#F8F7F4]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <div className="flex items-center gap-3">
             <Switch id="isPublished" name="isPublished" defaultChecked={product?.isPublished ?? false} />
             <label htmlFor="isPublished" className="text-sm text-[#1C1917]">Published</label>

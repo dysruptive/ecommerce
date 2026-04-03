@@ -6,6 +6,9 @@ import { categorySchema } from "@/lib/validations/product";
 import { revalidatePath } from "next/cache";
 
 type ActionResult = { success: true } | { success: false; error: string };
+type CreateInlineResult =
+  | { success: true; category: { id: string; name: string } }
+  | { success: false; error: string };
 
 async function getTenantId(): Promise<string> {
   const session = await auth();
@@ -58,6 +61,35 @@ export async function createCategory(
     return { success: true };
   } catch (error) {
     console.error("createCategory error:", error);
+    return { success: false, error: "Failed to create category." };
+  }
+}
+
+export async function createCategoryInline(
+  name: string,
+): Promise<CreateInlineResult> {
+  try {
+    const tenantId = await getTenantId();
+    const trimmed = name.trim();
+    if (!trimmed) return { success: false, error: "Name is required." };
+
+    const slug = slugify(trimmed);
+    const existing = await prisma.category.findUnique({
+      where: { tenantId_slug: { tenantId, slug } },
+    });
+    if (existing) {
+      return { success: false, error: "A category with this name already exists." };
+    }
+
+    const category = await prisma.category.create({
+      data: { tenantId, name: trimmed, slug },
+      select: { id: true, name: true },
+    });
+
+    revalidatePath("/admin/products");
+    return { success: true, category };
+  } catch (error) {
+    console.error("createCategoryInline error:", error);
     return { success: false, error: "Failed to create category." };
   }
 }

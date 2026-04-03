@@ -1,10 +1,84 @@
 "use client";
 
-import { useEffect, useActionState } from "react";
+import { useEffect, useActionState, useState } from "react";
 import { toast } from "sonner";
+import { ChevronsUpDown, Check } from "lucide-react";
 import { connectPaystackAccount } from "@/actions/settings";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 import type { Tenant } from "@/types";
 import type { PaystackBank } from "@/lib/paystack";
+
+function BankCombobox({
+  banks,
+  value,
+  onChange,
+}: {
+  banks: PaystackBank[];
+  value: string;
+  onChange: (code: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = banks.find((b) => b.code === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] outline-none hover:bg-[#FAFAF8] focus:border-[#B45309]"
+        >
+          <span className={selected ? "text-[#1C1917]" : "text-[#A8A29E]"}>
+            {selected ? selected.name : "Select your bank"}
+          </span>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-[#A8A29E]" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
+        <Command>
+          <CommandInput placeholder="Search banks..." />
+          <CommandList>
+            <CommandEmpty>No bank found.</CommandEmpty>
+            <CommandGroup>
+              {banks.map((bank) => (
+                <CommandItem
+                  key={bank.code}
+                  value={bank.name}
+                  onSelect={() => {
+                    onChange(bank.code);
+                    setOpen(false);
+                  }}
+                  data-checked={value === bank.code}
+                >
+                  {bank.name}
+                  {value === bank.code && (
+                    <Check className="ml-auto h-4 w-4 text-[#B45309]" />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function PaymentsForm({
   tenant,
@@ -14,6 +88,7 @@ export function PaymentsForm({
   banks: PaystackBank[];
 }) {
   const [state, formAction, isPending] = useActionState(connectPaystackAccount, null);
+  const [selectedBank, setSelectedBank] = useState("");
 
   useEffect(() => {
     if (!state) return;
@@ -57,30 +132,21 @@ export function PaymentsForm({
         )}
 
         <form action={formAction} className="space-y-5">
+          <input type="hidden" name="bankCode" value={selectedBank} />
+
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#1C1917]" htmlFor="bankCode">
-              Bank
-            </label>
+            <label className="text-sm font-medium text-[#1C1917]">Bank</label>
             {banks.length > 0 ? (
-              <select
-                id="bankCode"
-                name="bankCode"
-                required
-                className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] outline-none focus:border-[#B45309]"
-              >
-                <option value="">Select your bank</option>
-                {banks.map((bank) => (
-                  <option key={bank.code} value={bank.code}>
-                    {bank.name}
-                  </option>
-                ))}
-              </select>
+              <BankCombobox
+                banks={banks}
+                value={selectedBank}
+                onChange={setSelectedBank}
+              />
             ) : (
+              // Fallback when bank list failed to load — replace hidden input value directly
               <input
-                id="bankCode"
-                name="bankCode"
                 placeholder="Bank code (e.g. 030)"
-                required
+                onChange={(e) => setSelectedBank(e.target.value)}
                 className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
               />
             )}
@@ -104,7 +170,7 @@ export function PaymentsForm({
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || (!selectedBank && banks.length > 0)}
             className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
           >
             {isPending

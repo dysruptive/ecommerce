@@ -102,10 +102,14 @@ export async function listBanks(country = "ghana"): Promise<PaystackBank[]> {
     );
     if (!res.ok) return [];
     const json = await res.json();
-    return (json.data ?? []).map((b: { name: string; code: string }) => ({
-      name: b.name,
-      code: b.code,
-    }));
+    const seen = new Set<string>();
+    return (json.data ?? [])
+      .map((b: { name: string; code: string }) => ({ name: b.name, code: b.code }))
+      .filter((b: PaystackBank) => {
+        if (seen.has(b.code)) return false;
+        seen.add(b.code);
+        return true;
+      });
   } catch {
     return [];
   }
