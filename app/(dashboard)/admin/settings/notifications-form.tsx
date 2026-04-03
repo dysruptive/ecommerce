@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { updateNotificationSettings } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -68,20 +67,6 @@ export function NotificationsForm({ tenant }: { tenant: Tenant }) {
               name="smsEnabled"
               defaultChecked={tenant.smsEnabled}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="arkeselApiKey">Arkesel API Key</Label>
-            <Input
-              id="arkeselApiKey"
-              name="arkeselApiKey"
-              type="password"
-              defaultValue={tenant.arkeselApiKey ?? ""}
-              placeholder="Enter your Arkesel API key"
-            />
-            <p className="text-xs text-muted-foreground">
-              Required for SMS. Get your key from arkesel.com.
-            </p>
           </div>
 
           <Button type="submit" disabled={isPending}>

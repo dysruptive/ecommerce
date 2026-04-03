@@ -16,7 +16,6 @@ export const themeSettingsSchema = z.object({
 export const notificationSettingsSchema = z.object({
   emailEnabled: z.boolean(),
   smsEnabled: z.boolean(),
-  arkeselApiKey: z.string().max(200).optional().or(z.literal("")),
 });
 
 export const paymentSettingsSchema = z.object({

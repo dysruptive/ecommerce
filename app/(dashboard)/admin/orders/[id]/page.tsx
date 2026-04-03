@@ -100,9 +100,16 @@ export default async function OrderDetailPage({ params }: Props) {
                   {order.deliveryAddress}
                 </p>
                 {order.deliveryZone && (
-                  <p className="text-muted-foreground">
-                    Zone: {order.deliveryZone.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-muted-foreground">
+                      {order.deliveryZone.name}
+                    </p>
+                    {order.deliveryZone.type === "COURIER" && (
+                      <Badge variant="outline" className="text-xs">
+                        Courier — book via Yango / Bolt
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </>
             )}

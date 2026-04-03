@@ -15,3 +15,6 @@
 {"level":"info","message":"MCP Server shutting down","reason":"SIGINT","timestamp":"2026-04-02 18:37:15"}
 {"config":{"logLevel":"info","nodeVersion":"v25.8.1","platform":"darwin","serverName":"react-native-mcp-server"},"level":"info","logLevel":"info","message":"MCP Server starting","nodeVersion":"v25.8.1","platform":"darwin","timestamp":"2026-04-02 19:10:34","version":"1.1.0"}
 {"level":"info","message":"MCP Server shutting down","reason":"SIGINT","timestamp":"2026-04-02 19:11:26"}
+{"config":{"logLevel":"info","nodeVersion":"v25.8.1","platform":"darwin","serverName":"react-native-mcp-server"},"level":"info","logLevel":"info","message":"MCP Server starting","nodeVersion":"v25.8.1","platform":"darwin","timestamp":"2026-04-02 19:18:36","version":"1.1.0"}
+{"config":{"logLevel":"info","nodeVersion":"v25.8.1","platform":"darwin","serverName":"react-native-mcp-server"},"level":"info","logLevel":"info","message":"MCP Server starting","nodeVersion":"v25.8.1","platform":"darwin","timestamp":"2026-04-02 19:37:50","version":"1.1.0"}
+{"config":{"logLevel":"info","nodeVersion":"v25.8.1","platform":"darwin","serverName":"react-native-mcp-server"},"level":"info","logLevel":"info","message":"MCP Server starting","nodeVersion":"v25.8.1","platform":"darwin","timestamp":"2026-04-02 19:50:46","version":"1.1.0"}

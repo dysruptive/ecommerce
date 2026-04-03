@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useActionState, useRef } from "react";
-import { Plus, Trash2, Pencil, GripVertical } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Trash2, Pencil, GripVertical, Truck, Bike } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -21,89 +18,7 @@ import {
   deleteDeliveryZone,
   reorderDeliveryZones,
 } from "@/actions/delivery-zones";
-
-interface Zone {
-  id: string;
-  name: string;
-  regions: string;
-  fee: string | number;
-  isActive: boolean;
-  position: number;
-}
-
-function ZoneForm({
-  zone,
-  action,
-  onClose,
-}: {
-  zone?: Zone;
-  action: (
-    prev: { success: true } | { success: false; error: string } | null,
-    formData: FormData,
-  ) => Promise<{ success: true } | { success: false; error: string } | null>;
-  onClose: () => void;
-}) {
-  const [state, formAction, isPending] = useActionState(action, null);
-
-  if (state?.success) {
-    onClose();
-  }
-
-  return (
-    <form action={formAction} className="space-y-4">
-      {state?.success === false && (
-        <div className="text-sm text-destructive">{state.error}</div>
-      )}
-      <div className="space-y-2">
-        <Label htmlFor="zone-name">Zone Name</Label>
-        <Input
-          id="zone-name"
-          name="name"
-          defaultValue={zone?.name ?? ""}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="zone-regions">Regions</Label>
-        <Input
-          id="zone-regions"
-          name="regions"
-          defaultValue={zone?.regions ?? ""}
-          placeholder="e.g. Accra Metropolitan, Tema"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="zone-fee">Fee (GHS)</Label>
-        <Input
-          id="zone-fee"
-          name="fee"
-          type="number"
-          step="0.01"
-          min="0"
-          defaultValue={zone ? Number(zone.fee) : ""}
-          required
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <Switch
-          id="zone-active"
-          name="isActive"
-          defaultChecked={zone?.isActive ?? true}
-        />
-        <Label htmlFor="zone-active">Active</Label>
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving..." : zone ? "Update" : "Create"}
-        </Button>
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-      </div>
-    </form>
-  );
-}
+import { ZoneForm, type Zone } from "./zone-form";
 
 export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
   const [zones, setZones] = useState(initialZones);
@@ -111,18 +26,14 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
 
-  // Drag-and-drop state
   const dragIndex = useRef<number | null>(null);
-  const dragOverIndex = useRef<number | null>(null);
 
   function handleDragStart(index: number) {
     dragIndex.current = index;
   }
 
   function handleDragEnter(index: number) {
-    dragOverIndex.current = index;
     if (dragIndex.current === null || dragIndex.current === index) return;
-
     setZones((prev) => {
       const next = [...prev];
       const [moved] = next.splice(dragIndex.current!, 1);
@@ -134,7 +45,6 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
 
   async function handleDragEnd() {
     dragIndex.current = null;
-    dragOverIndex.current = null;
     setReorderError(null);
     const result = await reorderDeliveryZones(zones.map((z) => z.id));
     if (!result.success) setReorderError(result.error);
@@ -151,12 +61,12 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Zone
+                Add Option
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New Delivery Zone</DialogTitle>
+                <DialogTitle>New Delivery Option</DialogTitle>
               </DialogHeader>
               <ZoneForm
                 action={createDeliveryZone}
@@ -169,12 +79,12 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
 
       {zones.length === 0 ? (
         <div className="rounded-md border p-8 text-center text-sm text-muted-foreground">
-          No delivery zones configured.
+          No delivery options configured yet.
         </div>
       ) : (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            Drag to reorder — checkout displays zones in this order.
+            Drag to reorder — checkout displays options in this order.
           </p>
           {zones.map((zone, index) => (
             <Card
@@ -190,14 +100,24 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
                 <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
+                    {zone.type === "COURIER" ? (
+                      <Bike className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : (
+                      <Truck className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
                     <span className="font-medium">{zone.name}</span>
                     <Badge variant={zone.isActive ? "default" : "secondary"}>
                       {zone.isActive ? "Active" : "Inactive"}
                     </Badge>
+                    {zone.type === "COURIER" && (
+                      <Badge variant="outline">Courier</Badge>
+                    )}
                   </div>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {zone.regions}
-                  </p>
+                  {zone.type === "FIXED" && zone.regions && (
+                    <p className="truncate text-sm text-muted-foreground">
+                      {zone.regions}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-medium">

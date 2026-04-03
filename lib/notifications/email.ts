@@ -116,7 +116,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData) {
     </p>`;
 
   await resend.emails.send({
-    from: `${data.storeName} <noreply@resend.dev>`,
+    from: `${data.storeName} <noreply@dysruptivetech.com>`,
     to: data.customerEmail,
     subject: `Order Confirmed — #${data.orderNumber}`,
     html: baseLayout(data.storeName, content),
@@ -162,7 +162,7 @@ export async function sendNewOrderEmailToOwner(
     </p>`;
 
   await resend.emails.send({
-    from: `${data.storeName} Orders <noreply@resend.dev>`,
+    from: `${data.storeName} Orders <noreply@dysruptivetech.com>`,
     to: data.ownerEmail,
     subject: `New Order #${data.orderNumber} — GHS ${data.total.toFixed(2)}`,
     html: baseLayout(data.storeName, content),
@@ -199,7 +199,7 @@ export async function sendOrderStatusEmail(params: {
     </p>`;
 
   await resend.emails.send({
-    from: `${params.storeName} <noreply@resend.dev>`,
+    from: `${params.storeName} <noreply@dysruptivetech.com>`,
     to: params.customerEmail,
     subject: `Order #${params.orderNumber} — ${label}`,
     html: baseLayout(params.storeName, content),

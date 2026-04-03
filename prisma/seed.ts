@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomBytes } from "crypto";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "../generated/prisma/client";
 import { hash } from "bcryptjs";
@@ -413,6 +414,22 @@ async function main() {
     }),
   ]);
 
+  // ─── Tenant 3: Second Sight ────────────────────────────
+  // Minimal seed — owner registers via invite link, products added via dashboard
+
+  const secondSightInviteToken = randomBytes(32).toString("hex");
+
+  const secondSight = await prisma.tenant.create({
+    data: {
+      name: "Second Sight",
+      slug: "second-sight",
+      primaryColor: "#1C1917",
+      accentColor: "#D97706",
+      inviteToken: secondSightInviteToken,
+      inviteTokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    },
+  });
+
   // ─── Delivery Zones (same defaults for both tenants) ────
 
   const defaultZones = [
@@ -450,7 +467,7 @@ async function main() {
 
   const zoneMap: Record<string, string> = {};
 
-  for (const tenant of [freshMart, styleHub]) {
+  for (const tenant of [freshMart, styleHub, secondSight]) {
     for (const zone of defaultZones) {
       const created = await prisma.deliveryZone.create({
         data: { tenantId: tenant.id, ...zone },
@@ -460,6 +477,9 @@ async function main() {
       }
       if (tenant.id === styleHub.id && zone.name === "Greater Accra") {
         zoneMap["styleHub-greaterAccra"] = created.id;
+      }
+      if (tenant.id === secondSight.id && zone.name === "Accra Metro") {
+        zoneMap["secondSight-accra"] = created.id;
       }
     }
   }
@@ -646,6 +666,10 @@ async function main() {
   console.log("Seeding complete!");
   console.log(`  Fresh Mart (${freshMart.id}): ${freshMartProducts.length} products, 3 orders`);
   console.log(`  StyleHub GH (${styleHub.id}): ${styleHubProducts.length} products, 1 order`);
+  console.log(`  Second Sight (${secondSight.id}): tenant created, no products yet`);
+  console.log(`\n  ── Second Sight invite link ──────────────────────────────`);
+  console.log(`  http://second-sight.localhost:3000/auth/invite/${secondSightInviteToken}`);
+  console.log(`  ─────────────────────────────────────────────────────────\n`);
 }
 
 main()

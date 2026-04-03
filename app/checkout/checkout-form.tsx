@@ -19,16 +19,19 @@ import { createCheckoutOrder, validateDiscountCode } from "@/actions/orders";
 interface DeliveryZone {
   id: string;
   name: string;
-  regions: string;
+  type: string;
+  regions: string | null;
   fee: string | number;
 }
 
 interface CheckoutFormProps {
   deliveryZones: DeliveryZone[];
   primaryColor: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
 }
 
-export function CheckoutForm({ deliveryZones, primaryColor }: CheckoutFormProps) {
+export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEnabled }: CheckoutFormProps) {
   const { items, total: subtotal, clearCart } = useCart();
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [discountCode, setDiscountCode] = useState("");
@@ -120,22 +123,28 @@ export function CheckoutForm({ deliveryZones, primaryColor }: CheckoutFormProps)
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="customerEmail">Email</Label>
-              <Input
-                id="customerEmail"
-                name="customerEmail"
-                type="email"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone">Phone</Label>
+              <Label htmlFor="customerPhone">
+                Phone <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="customerPhone"
                 name="customerPhone"
                 type="tel"
                 placeholder="+233..."
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customerEmail">
+                Email{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
+              <Input
+                id="customerEmail"
+                name="customerEmail"
+                type="email"
               />
             </div>
           </div>
@@ -182,9 +191,16 @@ export function CheckoutForm({ deliveryZones, primaryColor }: CheckoutFormProps)
                     />
                     <div>
                       <p className="text-sm font-medium">{zone.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {zone.regions}
-                      </p>
+                      {zone.type === "FIXED" && zone.regions && (
+                        <p className="text-xs text-muted-foreground">
+                          {zone.regions}
+                        </p>
+                      )}
+                      {zone.type === "COURIER" && (
+                        <p className="text-xs text-muted-foreground">
+                          We will book a courier to deliver to your address
+                        </p>
+                      )}
                     </div>
                   </div>
                   <span className="text-sm font-medium">
@@ -249,6 +265,53 @@ export function CheckoutForm({ deliveryZones, primaryColor }: CheckoutFormProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Notification preferences */}
+      {(emailEnabled || smsEnabled) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Order Updates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">
+              How would you like to receive updates on your order?
+            </p>
+            <div className="space-y-2">
+              {smsEnabled && (
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="notifyBySMS"
+                    defaultChecked
+                    className="h-4 w-4 accent-[var(--store-primary)]"
+                  />
+                  <div>
+                    <p className="text-sm font-medium">SMS</p>
+                    <p className="text-xs text-muted-foreground">
+                      Updates sent to your phone number
+                    </p>
+                  </div>
+                </label>
+              )}
+              {emailEnabled && (
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="notifyByEmail"
+                    className="h-4 w-4 accent-[var(--store-primary)]"
+                  />
+                  <div>
+                    <p className="text-sm font-medium">Email</p>
+                    <p className="text-xs text-muted-foreground">
+                      Only available if you provide an email address
+                    </p>
+                  </div>
+                </label>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Note */}
       <Card>

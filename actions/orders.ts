@@ -92,6 +92,8 @@ export async function createCheckoutOrder(
       deliveryZoneId: formData.get("deliveryZoneId"),
       discountCode: formData.get("discountCode"),
       customerNote: formData.get("customerNote"),
+      notifyByEmail: formData.get("notifyByEmail"),
+      notifyBySMS: formData.get("notifyBySMS"),
     });
 
     if (!parsed.success) {
@@ -189,23 +191,29 @@ export async function createCheckoutOrder(
 
     const total = subtotal + deliveryFee - discountAmount;
 
+    // If no email provided, synthesise one for Paystack (which requires it)
+    // and to satisfy the customer unique constraint. Real email notifications
+    // are skipped for orders with a synthetic email.
+    const phone = parsed.data.customerPhone;
+    const customerEmail =
+      parsed.data.customerEmail ||
+      `${phone.replace(/\D/g, "")}@checkout.dysruptivetech.com`;
+    const hasRealEmail = !!parsed.data.customerEmail;
+
     // Create or find customer
     const customer = await prisma.customer.upsert({
       where: {
-        tenantId_email: {
-          tenantId: tenant.id,
-          email: parsed.data.customerEmail,
-        },
+        tenantId_email: { tenantId: tenant.id, email: customerEmail },
       },
       update: {
         name: parsed.data.customerName,
-        phone: parsed.data.customerPhone,
+        phone,
       },
       create: {
         tenantId: tenant.id,
-        email: parsed.data.customerEmail,
+        email: customerEmail,
         name: parsed.data.customerName,
-        phone: parsed.data.customerPhone,
+        phone,
       },
     });
 
@@ -232,6 +240,8 @@ export async function createCheckoutOrder(
         discountId: appliedDiscountId,
         deliveryAddress: parsed.data.deliveryAddress,
         customerNote: parsed.data.customerNote || null,
+        notifyByEmail: parsed.data.notifyByEmail && hasRealEmail,
+        notifyBySMS: parsed.data.notifyBySMS,
         items: {
           create: cartItems.data.map((item) => {
             const product = productMap.get(item.productId)!;
@@ -259,7 +269,7 @@ export async function createCheckoutOrder(
 
     // Initialize Paystack transaction
     const paystackResponse = await initializeTransaction({
-      email: parsed.data.customerEmail,
+      email: customerEmail,
       amount: Math.round(total * 100), // pesewas
       callbackUrl,
       subaccountCode: tenant.paystackSubaccountCode,

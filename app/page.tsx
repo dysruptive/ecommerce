@@ -9,6 +9,7 @@ import type { Tenant } from "@/types";
 
 import { FreshMartPage } from "@/stores/fresh-mart/page";
 import { StyleHubGhPage } from "@/stores/stylehub-gh/page";
+import { SecondSightPage } from "@/stores/second-sight/page";
 import { TemplatePage } from "@/stores/_template/page";
 
 type HomepageComponent = (props: { tenant: Tenant }) => Promise<React.ReactNode> | React.ReactNode;
@@ -16,6 +17,7 @@ type HomepageComponent = (props: { tenant: Tenant }) => Promise<React.ReactNode>
 const STORE_PAGES: Record<string, HomepageComponent> = {
   "fresh-mart": FreshMartPage,
   "stylehub-gh": StyleHubGhPage,
+  "second-sight": SecondSightPage,
 };
 // ──────────────────────────────────────────────────────────────────────────────
 

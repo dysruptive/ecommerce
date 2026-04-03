@@ -40,6 +40,11 @@ enum DiscountType {
   FIXED_AMOUNT
 }
 
+enum DeliveryType {
+  FIXED
+  COURIER
+}
+
 // ─── Tenant ─────────────────────────────────────────────────
 
 model Tenant {
@@ -61,11 +66,15 @@ model Tenant {
   // Notification settings
   emailEnabled           Boolean      @default(true)
   smsEnabled             Boolean      @default(false)
-  arkeselApiKey          String?
 
   // Theme
   primaryColor           String       @default("#000000")
   accentColor            String       @default("#3B82F6")
+
+  // Onboarding
+  inviteToken           String?      @unique
+  inviteTokenExpiresAt  DateTime?
+  onboardingDismissedAt DateTime?
 
   // Relations
   users                  User[]
@@ -210,6 +219,8 @@ model Order {
   discount        Discount?     @relation(fields: [discountId], references: [id])
   deliveryAddress String?
   customerNote    String?
+  notifyByEmail   Boolean       @default(true)
+  notifyBySMS     Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -240,7 +251,8 @@ model DeliveryZone {
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   name      String
-  regions   String
+  type      DeliveryType @default(FIXED)
+  regions   String?
   fee       Decimal  @db.Decimal(10, 2)
   isActive  Boolean  @default(true)
   position  Int      @default(0)

@@ -21,6 +21,7 @@ export async function createDeliveryZone(
     const tenantId = await getTenantId();
     const parsed = deliveryZoneSchema.safeParse({
       name: formData.get("name"),
+      type: formData.get("type"),
       regions: formData.get("regions"),
       fee: formData.get("fee"),
       isActive: formData.get("isActive") === "on",
@@ -60,6 +61,7 @@ export async function updateDeliveryZone(
     const tenantId = await getTenantId();
     const parsed = deliveryZoneSchema.safeParse({
       name: formData.get("name"),
+      type: formData.get("type"),
       regions: formData.get("regions"),
       fee: formData.get("fee"),
       isActive: formData.get("isActive") === "on",

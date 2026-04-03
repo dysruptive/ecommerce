@@ -18,6 +18,8 @@ export default async function CheckoutPage() {
         <CheckoutForm
           deliveryZones={JSON.parse(JSON.stringify(deliveryZones))}
           primaryColor={tenant.primaryColor}
+          emailEnabled={tenant.emailEnabled}
+          smsEnabled={tenant.smsEnabled}
         />
       </div>
     </StoreLayout>

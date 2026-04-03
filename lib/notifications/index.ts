@@ -42,10 +42,10 @@ export async function notifyOrderConfirmed(
   const emailData = buildOrderEmailData(order, tenant);
 
   // Email to customer
-  if (tenant.emailEnabled) {
+  if (tenant.emailEnabled && order.notifyByEmail) {
     tasks.push(sendOrderConfirmationEmail(emailData));
 
-    // Email to store owner
+    // Email to store owner (always, if email is enabled for the store)
     const owner = await prisma.user.findFirst({
       where: { tenantId: tenant.id, role: "OWNER" },
       select: { email: true },
@@ -58,7 +58,8 @@ export async function notifyOrderConfirmed(
   }
 
   // SMS to customer
-  if (tenant.smsEnabled && tenant.arkeselApiKey && order.customer.phone) {
+  const arkeselApiKey = process.env.ARKESEL_API_KEY;
+  if (tenant.smsEnabled && order.notifyBySMS && arkeselApiKey && order.customer.phone) {
     tasks.push(
       sendSMS(
         order.customer.phone,
@@ -68,7 +69,7 @@ export async function notifyOrderConfirmed(
           total: order.total.toNumber(),
           storeName: tenant.name,
         }),
-        tenant.arkeselApiKey,
+        arkeselApiKey,
         tenant.name,
       ),
     );
@@ -83,7 +84,7 @@ export async function notifyOrderConfirmed(
             total: order.total.toNumber(),
             customerName: order.customer.name,
           }),
-          tenant.arkeselApiKey,
+          arkeselApiKey,
           tenant.name,
         ),
       );
@@ -104,7 +105,7 @@ export async function notifyOrderStatusUpdated(
 ) {
   const tasks: Promise<unknown>[] = [];
 
-  if (tenant.emailEnabled) {
+  if (tenant.emailEnabled && order.notifyByEmail) {
     tasks.push(
       sendOrderStatusEmail({
         customerEmail: order.customer.email,
@@ -116,9 +117,11 @@ export async function notifyOrderStatusUpdated(
     );
   }
 
+  const arkeselApiKey = process.env.ARKESEL_API_KEY;
   if (
     tenant.smsEnabled &&
-    tenant.arkeselApiKey &&
+    order.notifyBySMS &&
+    arkeselApiKey &&
     order.customer.phone &&
     newStatus === "SHIPPED"
   ) {
@@ -129,7 +132,7 @@ export async function notifyOrderStatusUpdated(
           orderNumber: order.orderNumber,
           storeName: tenant.name,
         }),
-        tenant.arkeselApiKey,
+        arkeselApiKey,
         tenant.name,
       ),
     );

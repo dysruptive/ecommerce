@@ -2,6 +2,7 @@ import { ShoppingCart, DollarSign, Clock, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { getTenantFromSession } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 
@@ -68,6 +69,8 @@ export default async function DashboardOverviewPage() {
         title="Dashboard"
         description={`Welcome back to ${tenant.name}`}
       />
+
+      <OnboardingChecklist />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (

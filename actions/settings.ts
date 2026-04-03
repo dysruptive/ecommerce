@@ -89,7 +89,6 @@ export async function updateNotificationSettings(
     const parsed = notificationSettingsSchema.safeParse({
       emailEnabled: formData.get("emailEnabled") === "on",
       smsEnabled: formData.get("smsEnabled") === "on",
-      arkeselApiKey: formData.get("arkeselApiKey"),
     });
 
     if (!parsed.success) {
@@ -101,7 +100,6 @@ export async function updateNotificationSettings(
       data: {
         emailEnabled: parsed.data.emailEnabled,
         smsEnabled: parsed.data.smsEnabled,
-        arkeselApiKey: parsed.data.arkeselApiKey || null,
       },
     });
 
