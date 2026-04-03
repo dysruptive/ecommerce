@@ -32,6 +32,28 @@ function BankCombobox({
   const [open, setOpen] = useState(false);
   const selected = banks.find((b) => b.code === value);
 
+  const mobileMoney = banks.filter((b) => b.type === "mobile_money");
+  const regularBanks = banks.filter((b) => b.type !== "mobile_money");
+
+  function renderItem(bank: PaystackBank) {
+    return (
+      <CommandItem
+        key={bank.code}
+        value={bank.name}
+        onSelect={() => {
+          onChange(bank.code);
+          setOpen(false);
+        }}
+        data-checked={value === bank.code}
+      >
+        {bank.name}
+        {value === bank.code && (
+          <Check className="ml-auto h-4 w-4 text-[#B45309]" />
+        )}
+      </CommandItem>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -44,7 +66,7 @@ function BankCombobox({
           className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] outline-none hover:bg-[#FAFAF8] focus:border-[#B45309]"
         >
           <span className={selected ? "text-[#1C1917]" : "text-[#A8A29E]"}>
-            {selected ? selected.name : "Select your bank"}
+            {selected ? selected.name : "Select bank or mobile money"}
           </span>
           <ChevronsUpDown className="h-4 w-4 shrink-0 text-[#A8A29E]" />
         </button>
@@ -54,27 +76,19 @@ function BankCombobox({
         align="start"
       >
         <Command>
-          <CommandInput placeholder="Search banks..." />
+          <CommandInput placeholder="Search..." />
           <CommandList>
-            <CommandEmpty>No bank found.</CommandEmpty>
-            <CommandGroup>
-              {banks.map((bank) => (
-                <CommandItem
-                  key={bank.code}
-                  value={bank.name}
-                  onSelect={() => {
-                    onChange(bank.code);
-                    setOpen(false);
-                  }}
-                  data-checked={value === bank.code}
-                >
-                  {bank.name}
-                  {value === bank.code && (
-                    <Check className="ml-auto h-4 w-4 text-[#B45309]" />
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandEmpty>Not found.</CommandEmpty>
+            {mobileMoney.length > 0 && (
+              <CommandGroup heading="Mobile Money">
+                {mobileMoney.map(renderItem)}
+              </CommandGroup>
+            )}
+            {regularBanks.length > 0 && (
+              <CommandGroup heading="Banks">
+                {regularBanks.map(renderItem)}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
@@ -142,6 +156,7 @@ export function PaymentsForm({
 
   const isConnected = !!tenant.paystackSubaccountCode;
   const canSubmit = verify.status === "verified" && selectedBank;
+  const isMobileMoney = banks.find((b) => b.code === selectedBank)?.type === "mobile_money";
 
   return (
     <div className="rounded-xl border border-[#E5E2DB] bg-white">
@@ -194,14 +209,14 @@ export function PaymentsForm({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#1C1917]" htmlFor="accountNumber">
-              Account Number
+              {isMobileMoney ? "Mobile Money Number" : "Account Number"}
             </label>
             <input
               id="accountNumber"
               inputMode="numeric"
               value={accountNumber}
               onChange={(e) => handleAccountNumberChange(e.target.value)}
-              placeholder="Enter account number"
+              placeholder={isMobileMoney ? "e.g. 0551234987" : "Enter account number"}
               className={`h-10 w-full rounded-lg border bg-white px-3 font-mono text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors ${
                 verify.status === "verified"
                   ? "border-emerald-400 focus:border-emerald-500"

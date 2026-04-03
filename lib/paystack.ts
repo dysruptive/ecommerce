@@ -89,6 +89,7 @@ export function verifyWebhookSignature(body: string, signature: string): boolean
 export interface PaystackBank {
   name: string;
   code: string;
+  type: "ghipss" | "mobile_money" | "bank" | string;
 }
 
 export async function listBanks(country = "ghana"): Promise<PaystackBank[]> {
@@ -104,7 +105,11 @@ export async function listBanks(country = "ghana"): Promise<PaystackBank[]> {
     const json = await res.json();
     const seen = new Set<string>();
     return (json.data ?? [])
-      .map((b: { name: string; code: string }) => ({ name: b.name, code: b.code }))
+      .map((b: { name: string; code: string; type: string }) => ({
+        name: b.name,
+        code: b.code,
+        type: b.type ?? "bank",
+      }))
       .filter((b: PaystackBank) => {
         if (seen.has(b.code)) return false;
         seen.add(b.code);
