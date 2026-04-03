@@ -149,7 +149,8 @@ export async function createCheckoutOrder(
     if (!deliveryZone) {
       return { success: false, error: "Invalid delivery zone." };
     }
-    const deliveryFee = deliveryZone.fee.toNumber();
+    // Courier zones have no platform fee — the courier charges the customer directly
+    const deliveryFee = deliveryZone.fee != null ? deliveryZone.fee.toNumber() : 0;
 
     // Apply discount if provided
     let discountAmount = 0;

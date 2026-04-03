@@ -39,6 +39,8 @@ function BankCombobox({
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls="bank-listbox"
+          aria-haspopup="listbox"
           className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] outline-none hover:bg-[#FAFAF8] focus:border-[#B45309]"
         >
           <span className={selected ? "text-[#1C1917]" : "text-[#A8A29E]"}>

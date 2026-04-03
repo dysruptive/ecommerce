@@ -26,7 +26,11 @@
       "Bash(cp \"/Users/joel/Documents/ecommerce/app/products/[slug]/add-to-cart-form.tsx\" /Users/joel/Documents/ecommerce/components/store/add-to-cart-form.tsx)",
       "mcp__stitch__list_projects",
       "mcp__stitch__list_screens",
-      "mcp__stitch__get_screen"
+      "mcp__stitch__get_screen",
+      "Bash(find /Users/joel/Documents/ecommerce/app/\\\\\\(dashboard\\\\\\)/admin -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -exec wc -l {} +)",
+      "Bash(sort -k2)",
+      "Bash(find /Users/joel/Documents/ecommerce/components/dashboard -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -exec wc -l {} +)",
+      "Bash(npx shadcn@latest:*)"
     ]
   }
 }

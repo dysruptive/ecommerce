@@ -14,7 +14,7 @@ export default async function NewProductPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="New Product" />
       <ProductForm
         categories={JSON.parse(JSON.stringify(categories))}

@@ -33,7 +33,7 @@ export default async function EditProductPage({
   const boundUpdate = updateProduct.bind(null, product.id);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title={`Edit: ${product.name}`} />
       <ProductForm
         categories={JSON.parse(JSON.stringify(categories))}
