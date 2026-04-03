@@ -12,7 +12,10 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "tenant:create": "tsx scripts/create-tenant.ts",
+    "tenant:invite": "tsx scripts/regenerate-invite.ts",
+    "tenant:invite:get": "tsx scripts/get-invite.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -13,16 +13,33 @@ export default auth((request) => {
   const rootDomainWithoutPort = ROOT_DOMAIN.replace(/:\d+$/, "");
   const hostnameWithoutPort = hostname.replace(/:\d+$/, "");
 
-  // Protect /admin routes — redirect to login if not authenticated
+  // ── Protect /platform routes (platform admin console) ──────────────────────
+  if (pathname.startsWith("/platform")) {
+    if (!request.auth) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (request.auth.user?.role !== "PLATFORM_ADMIN") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // ── Protect /admin routes (store owner dashboard) ─────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!request.auth) {
       const loginUrl = new URL("/auth/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
+    // Platform admins should use /platform, not /admin
+    if (request.auth.user?.role === "PLATFORM_ADMIN") {
+      return NextResponse.redirect(new URL("/platform", request.url));
+    }
   }
 
-  // Root domain → marketing site, no tenant context needed
+  // Root domain → marketing site or platform console, no tenant context needed
   if (hostnameWithoutPort === rootDomainWithoutPort) {
     return NextResponse.next();
   }
@@ -32,10 +49,7 @@ export default auth((request) => {
   let lookupType: "slug" | "domain" = "slug";
 
   if (hostnameWithoutPort.endsWith(`.${rootDomainWithoutPort}`)) {
-    tenantSlug = hostnameWithoutPort.replace(
-      `.${rootDomainWithoutPort}`,
-      "",
-    );
+    tenantSlug = hostnameWithoutPort.replace(`.${rootDomainWithoutPort}`, "");
     lookupType = "slug";
   } else {
     tenantSlug = hostnameWithoutPort;
@@ -46,7 +60,6 @@ export default auth((request) => {
     return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 
-  // Pass tenant info to server components via headers
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-tenant-slug", tenantSlug);
   requestHeaders.set("x-tenant-lookup-type", lookupType);

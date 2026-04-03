@@ -12,6 +12,7 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/auth/login");
+  if (session.user.role === "PLATFORM_ADMIN") redirect("/platform");
 
   const tenant = await getTenantFromSession();
 

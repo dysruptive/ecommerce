@@ -2,8 +2,8 @@ import "next-auth";
 
 declare module "next-auth" {
   interface User {
-    tenantId: string;
-    role: "OWNER" | "STAFF";
+    tenantId: string | null;
+    role: "OWNER" | "STAFF" | "PLATFORM_ADMIN";
   }
 
   interface Session {
@@ -11,15 +11,15 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string;
-      tenantId: string;
-      role: "OWNER" | "STAFF";
+      tenantId: string | null;
+      role: "OWNER" | "STAFF" | "PLATFORM_ADMIN";
     };
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    tenantId?: string;
-    role?: "OWNER" | "STAFF";
+    tenantId?: string | null;
+    role?: "OWNER" | "STAFF" | "PLATFORM_ADMIN";
   }
 }

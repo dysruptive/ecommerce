@@ -65,6 +65,10 @@ export const getTenantFromSession = cache(async (): Promise<Tenant> => {
   const { auth } = await import("@/lib/auth");
   const session = await auth();
 
+  if (session?.user?.role === "PLATFORM_ADMIN") {
+    throw new Error("getTenantFromSession() cannot be called for PLATFORM_ADMIN users");
+  }
+
   if (!session?.user?.tenantId) {
     throw new Error("No authenticated session with tenantId");
   }

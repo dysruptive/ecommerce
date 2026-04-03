@@ -10,6 +10,9 @@ const adapter = new PrismaNeon({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // ⚠️  LOCAL DEVELOPMENT ONLY — wipes and recreates all data.
+  //     Never run this against a production database.
+  //     To onboard a store in production, use: npm run tenant:create
   console.log("Seeding database...");
 
   // Clean existing data
@@ -26,6 +29,18 @@ async function main() {
   await prisma.tenant.deleteMany();
 
   const passwordHash = await hash("password123", 12);
+
+  // ─── Platform Admin ─────────────────────────────────────
+
+  await prisma.user.create({
+    data: {
+      email: "admin@platform.test",
+      name: "Platform Admin",
+      passwordHash,
+      tenantId: null,
+      role: "PLATFORM_ADMIN",
+    },
+  });
 
   // ─── Tenant 1: Fresh Mart ───────────────────────────────
 
@@ -664,6 +679,7 @@ async function main() {
   });
 
   console.log("Seeding complete!");
+  console.log(`  Platform Admin: admin@platform.test / password123`);
   console.log(`  Fresh Mart (${freshMart.id}): ${freshMartProducts.length} products, 3 orders`);
   console.log(`  StyleHub GH (${styleHub.id}): ${styleHubProducts.length} products, 1 order`);
   console.log(`  Second Sight (${secondSight.id}): tenant created, no products yet`);
