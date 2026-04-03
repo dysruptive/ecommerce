@@ -75,6 +75,7 @@ export async function connectPaystackAccount(
 ): Promise<ActionResult> {
   try {
     const tenantId = await getTenantId();
+    const bankName = (formData.get("bankName") as string | null) ?? "";
     const parsed = paymentSettingsSchema.safeParse({
       bankCode: formData.get("bankCode"),
       accountNumber: formData.get("accountNumber"),
@@ -120,7 +121,12 @@ export async function connectPaystackAccount(
 
     await prisma.tenant.update({
       where: { id: tenantId },
-      data: { paystackSubaccountCode: subaccountCode },
+      data: {
+        paystackSubaccountCode: subaccountCode,
+        paystackAccountName: accountName,
+        paystackBankName: bankName || null,
+        paystackAccountNumber: parsed.data.accountNumber,
+      },
     });
 
     return { success: true };

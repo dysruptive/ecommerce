@@ -63,6 +63,9 @@ model Tenant {
 
   // Paystack
   paystackSubaccountCode String?
+  paystackAccountName    String?
+  paystackBankName       String?
+  paystackAccountNumber  String?
 
   // Notification settings
   emailEnabled           Boolean      @default(true)

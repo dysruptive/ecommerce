@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useActionState, useState, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronsUpDown, Check, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { connectPaystackAccount, verifyBankAccount } from "@/actions/settings";
@@ -109,18 +110,26 @@ export function PaymentsForm({
   tenant: Tenant;
   banks: PaystackBank[];
 }) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(connectPaystackAccount, null);
   const [selectedBank, setSelectedBank] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [verify, setVerify] = useState<VerifyState>({ status: "idle" });
+  const [changing, setChanging] = useState(false);
   const [, startVerifyTransition] = useTransition();
+  const [, startResetTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!state) return;
-    if (state.success) toast.success("Bank account connected successfully.");
-    else toast.error(state.error);
-  }, [state]);
+    if (state.success) {
+      toast.success("Bank account connected successfully.");
+      startResetTransition(() => setChanging(false));
+      router.refresh();
+    } else {
+      toast.error(state.error);
+    }
+  }, [state, router]);
 
   function handleBankChange(code: string) {
     setSelectedBank(code);
@@ -132,7 +141,6 @@ export function PaymentsForm({
     setVerify({ status: "idle" });
   }
 
-  // Debounced verification — runs after both fields are populated and typing stops
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!selectedBank || accountNumber.length < 6) return;
@@ -157,42 +165,62 @@ export function PaymentsForm({
   const isConnected = !!tenant.paystackSubaccountCode;
   const canSubmit = verify.status === "verified" && selectedBank;
   const isMobileMoney = banks.find((b) => b.code === selectedBank)?.type === "mobile_money";
+  const selectedBankName = banks.find((b) => b.code === selectedBank)?.name ?? "";
+
+  // Mask account number: show last 4 chars, rest as *
+  function maskAccount(num: string) {
+    if (num.length <= 4) return num;
+    return "•".repeat(num.length - 4) + num.slice(-4);
+  }
 
   return (
     <div className="rounded-xl border border-[#E5E2DB] bg-white">
       <div className="border-b border-[#E5E2DB] px-5 py-4">
         <p className="text-sm font-semibold text-[#1C1917]">Payments</p>
         <p className="mt-0.5 text-xs text-[#78716C]">
-          Enter your bank account details. We&apos;ll verify the account with Paystack and set up
-          your payment connection automatically.
+          {isConnected
+            ? "Your payout account for receiving payments."
+            : "Connect a bank or mobile money account to receive payments."}
         </p>
       </div>
 
-      <div className="px-5 py-5">
-        <div className="mb-5 flex items-center gap-3">
-          <span className="text-sm font-medium text-[#1C1917]">Status</span>
-          {isConnected ? (
-            <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-              Connected
-            </span>
-          ) : (
-            <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-500">
-              Not configured
-            </span>
-          )}
-        </div>
-
-        {isConnected && (
-          <div className="mb-5 rounded-lg border border-emerald-100 bg-emerald-50/50 px-4 py-3">
-            <p className="text-xs text-emerald-800">
-              Your bank account is connected. Fill in the form below to switch to a different account.
-            </p>
+      <div className="px-5 py-5 space-y-5">
+        {/* Connected account card */}
+        {isConnected && !changing && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 px-4 py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span className="text-sm font-semibold text-emerald-900">
+                    {tenant.paystackAccountName ?? "Account connected"}
+                  </span>
+                </div>
+                {(tenant.paystackBankName || tenant.paystackAccountNumber) && (
+                  <p className="text-xs text-emerald-700 pl-6">
+                    {tenant.paystackBankName}
+                    {tenant.paystackBankName && tenant.paystackAccountNumber && " · "}
+                    {tenant.paystackAccountNumber && maskAccount(tenant.paystackAccountNumber)}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setChanging(true)}
+                className="shrink-0 text-xs font-medium text-[#B45309] hover:underline underline-offset-2"
+              >
+                Change
+              </button>
+            </div>
           </div>
         )}
 
-        <form action={formAction} className="space-y-5">
-          <input type="hidden" name="bankCode" value={selectedBank} />
-          <input type="hidden" name="accountNumber" value={accountNumber} />
+        {/* Form — shown when not connected, or when changing */}
+        {(!isConnected || changing) && (
+          <form action={formAction} className="space-y-5">
+            <input type="hidden" name="bankCode" value={selectedBank} />
+            <input type="hidden" name="accountNumber" value={accountNumber} />
+            <input type="hidden" name="bankName" value={selectedBankName} />
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#1C1917]">Bank</label>
@@ -247,18 +275,30 @@ export function PaymentsForm({
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={isPending || !canSubmit}
-            className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
-          >
-            {isPending
-              ? "Connecting..."
-              : isConnected
-              ? "Update bank account"
-              : "Connect bank account"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={isPending || !canSubmit}
+              className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
+            >
+              {isPending
+                ? "Connecting..."
+                : changing
+                ? "Update account"
+                : "Connect account"}
+            </button>
+            {changing && (
+              <button
+                type="button"
+                onClick={() => { setChanging(false); setSelectedBank(""); setAccountNumber(""); setVerify({ status: "idle" }); }}
+                className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#78716C] hover:bg-[#F8F7F4]"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
+        )}
       </div>
     </div>
   );
