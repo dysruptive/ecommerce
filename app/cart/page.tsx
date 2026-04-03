@@ -1,9 +1,13 @@
 import { getCurrentTenant } from "@/lib/tenant";
+import { STORE_REGISTRY } from "@/stores/registry";
 import { StoreLayout } from "@/components/store/store-layout";
 import { CartContent } from "./cart-content";
 
 export default async function CartPage() {
   const tenant = await getCurrentTenant();
+  const CartPage = STORE_REGISTRY[tenant.slug]?.CartPage;
+
+  if (CartPage) return <CartPage tenant={tenant} />;
 
   return (
     <StoreLayout tenant={tenant}>

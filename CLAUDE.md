@@ -126,20 +126,30 @@ Each store gets a custom homepage under `stores/<slug>/`. The pattern is strict:
 - **`stores/<slug>/sections/*.tsx`** — pure presentational components. No `async`, no DB calls, no `prisma`. Receive typed props, return JSX.
 - **`stores/_template/`** — the copy-paste starter. Duplicate this folder when adding a new store.
 
-To add a homepage for a new store:
+To add a new store:
 1. Copy `stores/_template/` → `stores/<your-slug>/`
-2. Customise `page.tsx` data fetching and each section component
-3. Register it in `app/page.tsx` — add one line to `STORE_PAGES`:
+2. Build out the store's components: `font-provider.tsx`, `components/header.tsx`, `components/footer.tsx`, `sections/`, `products/listing.tsx`, `products/detail.tsx`, `cart/index.tsx`, `checkout/index.tsx`
+3. Add a **single entry** to `STORE_REGISTRY` in `stores/registry.ts`:
 
 ```typescript
-const STORE_PAGES: Record<string, HomepageComponent> = {
-  "fresh-mart": FreshMartPage,
-  "stylehub-gh": StyleHubGhPage,
-  "your-slug": YourStorePage,   // ← add this
+import { YourStoreHeader } from "@/stores/your-slug/components/header";
+// ... other imports
+
+export const STORE_REGISTRY: Record<string, StoreConfig> = {
+  // existing stores ...
+  "your-slug": {
+    Header: YourStoreHeader,
+    Footer: YourStoreFooter,
+    HomePage: YourStorePage,
+    ProductsPage: YourStoreProductsListing,
+    DetailPage: YourStoreProductDetail,
+    CartPage: YourStoreCartPage,
+    CheckoutPage: YourStoreCheckoutPage,
+  },
 };
 ```
 
-Any store slug not in `STORE_PAGES` falls back to `TemplatePage` automatically.
+All routes (`/`, `/products`, `/products/[slug]`, `/cart`, `/checkout`) automatically pick up the new store. Any slug not in `STORE_REGISTRY` falls back to the template automatically.
 
 ### Store Landing Page Design
 

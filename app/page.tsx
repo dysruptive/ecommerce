@@ -1,25 +1,6 @@
 import { hasTenantContext, getCurrentTenant } from "@/lib/tenant";
-import type { Tenant } from "@/types";
-
-// ─── Per-store homepage registry ──────────────────────────────────────────────
-// To add a homepage for a new store:
-//   1. Copy stores/_template/ → stores/<slug>/
-//   2. Customise the sections and page.tsx to match the brand
-//   3. Add one line to STORE_PAGES below (slug → exported page component)
-
-import { FreshMartPage } from "@/stores/fresh-mart/page";
-import { StyleHubGhPage } from "@/stores/stylehub-gh/page";
-import { SecondSightPage } from "@/stores/second-sight/page";
+import { STORE_REGISTRY } from "@/stores/registry";
 import { TemplatePage } from "@/stores/_template/page";
-
-type HomepageComponent = (props: { tenant: Tenant }) => Promise<React.ReactNode> | React.ReactNode;
-
-const STORE_PAGES: Record<string, HomepageComponent> = {
-  "fresh-mart": FreshMartPage,
-  "stylehub-gh": StyleHubGhPage,
-  "second-sight": SecondSightPage,
-};
-// ──────────────────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
   const isTenant = await hasTenantContext();
@@ -36,7 +17,7 @@ export default async function HomePage() {
   }
 
   const tenant = await getCurrentTenant();
-  const Page = STORE_PAGES[tenant.slug] ?? TemplatePage;
+  const Page = STORE_REGISTRY[tenant.slug]?.HomePage ?? TemplatePage;
 
   return <Page tenant={tenant} />;
 }

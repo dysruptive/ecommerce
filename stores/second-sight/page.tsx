@@ -1,17 +1,18 @@
 import type { Tenant } from "@/types";
 import { prisma } from "@/lib/db";
 import { StoreLayout } from "@/components/store/store-layout";
+import { SecondSightFontProvider } from "./font-provider";
 import { Hero } from "./sections/hero";
-import { Collections } from "./sections/collections";
-import { FeaturedFrames } from "./sections/featured-frames";
-import { BrandPromise } from "./sections/brand-promise";
+import { BentoCategories } from "./sections/collections";
+import { SignatureEdit } from "./sections/featured-frames";
+import { BrandStory } from "./sections/brand-promise";
 
 export async function SecondSightPage({ tenant }: { tenant: Tenant }) {
-  const [categories, featured] = await Promise.all([
+  const [categories, featuredProducts] = await Promise.all([
     prisma.category.findMany({
       where: { tenantId: tenant.id },
       orderBy: { name: "asc" },
-      take: 2,
+      take: 3,
     }),
     prisma.product.findMany({
       where: { tenantId: tenant.id, isPublished: true, isArchived: false },
@@ -21,7 +22,7 @@ export async function SecondSightPage({ tenant }: { tenant: Tenant }) {
     }),
   ]);
 
-  const featuredItems = featured.map((p) => ({
+  const products = featuredProducts.map((p) => ({
     id: p.id,
     slug: p.slug,
     name: p.name,
@@ -31,11 +32,13 @@ export async function SecondSightPage({ tenant }: { tenant: Tenant }) {
   }));
 
   return (
-    <StoreLayout tenant={tenant}>
-      <Hero />
-      <Collections categories={categories} />
-      <FeaturedFrames products={featuredItems} />
-      <BrandPromise />
-    </StoreLayout>
+    <SecondSightFontProvider>
+      <StoreLayout tenant={tenant}>
+        <Hero />
+        <BentoCategories categories={categories} />
+        <SignatureEdit products={products} />
+        <BrandStory />
+      </StoreLayout>
+    </SecondSightFontProvider>
   );
 }

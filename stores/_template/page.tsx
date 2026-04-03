@@ -7,7 +7,7 @@ import { ProductGrid } from "./sections/product-grid";
 
 // ─── Copy this file to stores/<your-slug>/page.tsx to start a new store ───────
 // 1. Duplicate the whole stores/_template/ folder and rename it to your slug
-// 2. Register it in app/page.tsx STORE_PAGES registry
+// 2. Add a single entry to STORE_REGISTRY in stores/registry.ts
 // 3. Customise sections/ to match the store's brand
 
 export async function TemplatePage({ tenant }: { tenant: Tenant }) {

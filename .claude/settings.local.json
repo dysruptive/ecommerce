@@ -20,7 +20,13 @@
       "Bash(npx shadcn@latest add separator badge tabs textarea switch avatar dropdown-menu tooltip sheet)",
       "Bash(node:*)",
       "Bash(npm run:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(ls:*)",
+      "Bash(cp \"/Users/joel/Documents/ecommerce/app/products/[slug]/image-gallery.tsx\" /Users/joel/Documents/ecommerce/components/store/image-gallery.tsx)",
+      "Bash(cp \"/Users/joel/Documents/ecommerce/app/products/[slug]/add-to-cart-form.tsx\" /Users/joel/Documents/ecommerce/components/store/add-to-cart-form.tsx)",
+      "mcp__stitch__list_projects",
+      "mcp__stitch__list_screens",
+      "mcp__stitch__get_screen"
     ]
   }
 }

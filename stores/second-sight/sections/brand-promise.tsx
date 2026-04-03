@@ -1,46 +1,51 @@
-const PROMISES = [
-  {
-    number: "01",
-    title: "Premium Materials",
-    body: "Acetate and stainless steel frames built to last years, not months.",
-  },
-  {
-    number: "02",
-    title: "Prices That Fit",
-    body: "Quality eyewear shouldn't cost a fortune. Frames start from ₵299.",
-  },
-  {
-    number: "03",
-    title: "Prescription Ready",
-    body: "Every frame can be fitted with your lenses. Just bring your prescription.",
-  },
-];
-
-export function BrandPromise() {
+export function BrandStory() {
   return (
-    <section className="bg-stone-900 py-20 text-stone-50">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold tracking-tight">Why Second Sight</h2>
-        </div>
-
-        <div className="grid grid-cols-1 gap-0 sm:grid-cols-3 sm:divide-x sm:divide-stone-700">
-          {PROMISES.map((promise) => (
-            <div
-              key={promise.number}
-              className="border-t border-stone-700 py-8 sm:border-none sm:px-8 first:sm:pl-0 last:sm:pr-0"
-            >
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
-                {promise.number}
+    <>
+      {/* Editorial brand story */}
+      <section className="px-6 py-24 lg:px-8">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12">
+            {/* Text — 5 cols */}
+            <div className="lg:col-span-5">
+              <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-[#6c5e06]">
+                Our Craft
               </span>
-              <h3 className="mt-4 text-lg font-semibold">{promise.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-stone-400">
-                {promise.body}
+              <h2
+                className="mt-5 text-4xl font-bold leading-tight text-[#1a1c1b] md:text-5xl"
+                style={{ fontFamily: "var(--font-noto-serif)" }}
+              >
+                Precision Made. Built to Last.
+              </h2>
+              <p className="mt-7 text-base leading-relaxed text-[#5f5e5e]">
+                Every Second Sight frame goes through a rigorous quality process using premium acetate and lightweight titanium alloys. We believe great eyewear should be an investment — pieces you reach for every day, year after year.
               </p>
             </div>
-          ))}
+
+            {/* Tonal image block — 7 cols */}
+            <div className="grid grid-cols-2 gap-5 lg:col-span-7">
+              <div className="aspect-[4/5] bg-[#e8e8e6] pt-16">
+                <div className="h-full w-full bg-[#dddbd6]" />
+              </div>
+              <div className="aspect-[4/5] bg-[#d4cfc4]" />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Dark quote section */}
+      <section className="bg-[#1a1c1b] px-6 py-20 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <blockquote
+            className="text-3xl font-bold italic leading-tight text-[#f9f9f7] md:text-4xl lg:text-5xl"
+            style={{ fontFamily: "var(--font-noto-serif)" }}
+          >
+            &ldquo;See the world through the right lens.&rdquo;
+          </blockquote>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.25em] text-[#c5b358]">
+            — Second Sight Eyewear, Accra
+          </p>
+        </div>
+      </section>
+    </>
   );
 }

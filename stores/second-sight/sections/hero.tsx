@@ -1,97 +1,55 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-stone-900 text-stone-50">
-      {/* Subtle dot-grid texture */}
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }}
-      />
-
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid min-h-screen grid-cols-1 items-center gap-12 py-24 lg:grid-cols-2 lg:py-0">
-          {/* Text side */}
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
-              Eyewear for every story
-            </p>
-            <h1 className="mt-6 text-6xl font-bold leading-[1.05] tracking-tight lg:text-7xl">
-              See
-              <br />
-              beyond.
-            </h1>
-            <p className="mt-6 text-lg leading-relaxed text-stone-400">
-              Premium frames at prices that make sense. Whether you need
-              prescription lenses or a new look — we have a pair with your name
-              on it.
-            </p>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Link
-                href="/products"
-                className="inline-flex items-center bg-amber-600 px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-amber-500"
-              >
-                Browse Collections
-              </Link>
-              <Link
-                href="/products"
-                className="inline-flex items-center border border-stone-600 px-8 py-4 text-sm font-semibold text-stone-300 transition-colors hover:border-stone-400 hover:text-stone-50"
-              >
-                Find Your Frame
-              </Link>
-            </div>
-          </div>
-
-          {/* Visual side */}
-          <div className="flex items-center justify-center lg:justify-end">
-            <div className="relative">
-              <div className="absolute -inset-8 rounded-full border border-stone-700/50" />
-              <div className="relative flex h-80 w-80 items-center justify-center overflow-hidden rounded-full bg-stone-800 lg:h-96 lg:w-96">
-                {/* Glasses outline — replaced by real product photo when available */}
-                <svg
-                  viewBox="0 0 240 96"
-                  className="w-52 opacity-25"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="96"
-                    height="64"
-                    rx="24"
-                    stroke="white"
-                    strokeWidth="5"
-                  />
-                  <rect
-                    x="141"
-                    y="3"
-                    width="96"
-                    height="64"
-                    rx="24"
-                    stroke="white"
-                    strokeWidth="5"
-                  />
-                  <path d="M99 35 L141 35" stroke="white" strokeWidth="5" />
-                  <path d="M3 35 L-14 22" stroke="white" strokeWidth="5" />
-                  <path d="M237 35 L254 22" stroke="white" strokeWidth="5" />
-                </svg>
-              </div>
-              <div className="absolute -bottom-4 -right-4 bg-amber-600 px-4 py-2 text-xs font-bold text-white">
-                From ₵299
-              </div>
-            </div>
-          </div>
-        </div>
+    <section className="relative flex min-h-svh items-center overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/stores/second-sight/hero.png"
+          alt="Second Sight premium eyewear"
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-[#1a1c1b]/10" />
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-stone-600">
-        <span className="text-xs uppercase tracking-widest">Scroll</span>
-        <div className="h-8 w-px bg-stone-700" />
+      {/* Content */}
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-6 py-32 lg:px-8 lg:py-0">
+        <div className="max-w-2xl">
+          <span
+            className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6c5e06]"
+            style={{ fontFamily: "var(--font-manrope)" }}
+          >
+            New Season Premiere
+          </span>
+          <h1
+            className="mt-5 text-6xl font-bold leading-[0.95] tracking-tight text-[#1a1c1b] md:text-8xl lg:text-[6rem]"
+            style={{ fontFamily: "var(--font-noto-serif)" }}
+          >
+            The Clarity<br />Collection
+          </h1>
+          <p className="mt-7 max-w-md text-base leading-relaxed text-[#5f5e5e]">
+            Precision frames for every story. Prescription lenses, statement sunglasses, and blue-light protection — crafted for Accra.
+          </p>
+          <div className="mt-10 flex flex-wrap gap-4">
+            <Link
+              href="/products"
+              className="inline-flex items-center bg-[#6c5e06] px-8 py-3.5 text-sm font-medium tracking-wide text-white transition-opacity hover:opacity-90"
+            >
+              SHOP COLLECTION
+            </Link>
+            <Link
+              href="/products?category=prescription-frames"
+              className="inline-flex items-center border border-[#cdc6b3]/60 px-8 py-3.5 text-sm font-medium tracking-wide text-[#1a1c1b] transition-colors hover:bg-[#f4f4f2]"
+            >
+              OPTICAL FRAMES
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );

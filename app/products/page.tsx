@@ -1,16 +1,11 @@
 import { getCurrentTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
-import { StoreLayout } from "@/components/store/store-layout";
-import { ProductCard } from "@/components/store/product-card";
-import { ProductFilters } from "./product-filters";
 import type { Prisma } from "@/generated/prisma/client";
+import { STORE_REGISTRY } from "@/stores/registry";
+import { TemplateProductsListing } from "@/stores/_template/products/listing";
 
 interface Props {
-  searchParams: Promise<{
-    category?: string;
-    q?: string;
-    sort?: string;
-  }>;
+  searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
 }
 
 export default async function ProductsPage({ searchParams }: Props) {
@@ -22,7 +17,6 @@ export default async function ProductsPage({ searchParams }: Props) {
     orderBy: { name: "asc" },
   });
 
-  // Build the where clause
   const where: Prisma.ProductWhereInput = {
     tenantId: tenant.id,
     isPublished: true,
@@ -30,15 +24,14 @@ export default async function ProductsPage({ searchParams }: Props) {
   };
 
   if (params.category) {
-    const category = categories.find((c) => c.slug === params.category);
-    if (category) where.categoryId = category.id;
+    const cat = categories.find((c) => c.slug === params.category);
+    if (cat) where.categoryId = cat.id;
   }
 
   if (params.q) {
     where.name = { contains: params.q, mode: "insensitive" };
   }
 
-  // Build the orderBy
   let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
   if (params.sort === "price-asc") orderBy = { price: "asc" };
   if (params.sort === "price-desc") orderBy = { price: "desc" };
@@ -49,40 +42,24 @@ export default async function ProductsPage({ searchParams }: Props) {
     orderBy,
   });
 
+  const productItems = products.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    price: p.price.toNumber(),
+    compareAtPrice: p.compareAtPrice?.toNumber(),
+    imageUrl: p.images[0]?.url,
+  }));
+
+  const Page =
+    STORE_REGISTRY[tenant.slug]?.ProductsPage ?? TemplateProductsListing;
+
   return (
-    <StoreLayout tenant={tenant}>
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="mb-6 text-2xl font-bold">Products</h1>
-
-        <ProductFilters
-          categories={categories.map((c) => ({
-            slug: c.slug,
-            name: c.name,
-          }))}
-          currentCategory={params.category}
-          currentSort={params.sort}
-          currentQuery={params.q}
-        />
-
-        {products.length === 0 ? (
-          <p className="mt-8 text-center text-muted-foreground">
-            No products found.
-          </p>
-        ) : (
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                slug={product.slug}
-                name={product.name}
-                price={product.price.toNumber()}
-                compareAtPrice={product.compareAtPrice?.toNumber()}
-                imageUrl={product.images[0]?.url}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </StoreLayout>
+    <Page
+      tenant={tenant}
+      products={productItems}
+      categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+      filters={{ category: params.category, q: params.q, sort: params.sort }}
+    />
   );
 }
