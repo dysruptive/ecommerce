@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useActionState, useState } from "react";
+import { useEffect, useActionState, useState, useRef, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronsUpDown, Check } from "lucide-react";
-import { connectPaystackAccount } from "@/actions/settings";
+import { ChevronsUpDown, Check, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { connectPaystackAccount, verifyBankAccount } from "@/actions/settings";
 import {
   Popover,
   PopoverContent,
@@ -82,6 +82,12 @@ function BankCombobox({
   );
 }
 
+type VerifyState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "verified"; accountName: string }
+  | { status: "error"; message: string };
+
 export function PaymentsForm({
   tenant,
   banks,
@@ -91,6 +97,10 @@ export function PaymentsForm({
 }) {
   const [state, formAction, isPending] = useActionState(connectPaystackAccount, null);
   const [selectedBank, setSelectedBank] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [verify, setVerify] = useState<VerifyState>({ status: "idle" });
+  const [, startVerifyTransition] = useTransition();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!state) return;
@@ -98,7 +108,40 @@ export function PaymentsForm({
     else toast.error(state.error);
   }, [state]);
 
+  function handleBankChange(code: string) {
+    setSelectedBank(code);
+    setVerify({ status: "idle" });
+  }
+
+  function handleAccountNumberChange(value: string) {
+    setAccountNumber(value.replace(/\D/g, ""));
+    setVerify({ status: "idle" });
+  }
+
+  // Debounced verification — runs after both fields are populated and typing stops
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!selectedBank || accountNumber.length < 6) return;
+
+    debounceRef.current = setTimeout(() => {
+      setVerify({ status: "loading" });
+      startVerifyTransition(async () => {
+        const result = await verifyBankAccount(selectedBank, accountNumber);
+        if (result.success) {
+          setVerify({ status: "verified", accountName: result.accountName });
+        } else {
+          setVerify({ status: "error", message: result.error });
+        }
+      });
+    }, 700);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [selectedBank, accountNumber]);
+
   const isConnected = !!tenant.paystackSubaccountCode;
+  const canSubmit = verify.status === "verified" && selectedBank;
 
   return (
     <div className="rounded-xl border border-[#E5E2DB] bg-white">
@@ -127,28 +170,23 @@ export function PaymentsForm({
         {isConnected && (
           <div className="mb-5 rounded-lg border border-emerald-100 bg-emerald-50/50 px-4 py-3">
             <p className="text-xs text-emerald-800">
-              Your bank account is connected and ready to accept payments. Fill in the form below
-              to switch to a different account.
+              Your bank account is connected. Fill in the form below to switch to a different account.
             </p>
           </div>
         )}
 
         <form action={formAction} className="space-y-5">
           <input type="hidden" name="bankCode" value={selectedBank} />
+          <input type="hidden" name="accountNumber" value={accountNumber} />
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#1C1917]">Bank</label>
             {banks.length > 0 ? (
-              <BankCombobox
-                banks={banks}
-                value={selectedBank}
-                onChange={setSelectedBank}
-              />
+              <BankCombobox banks={banks} value={selectedBank} onChange={handleBankChange} />
             ) : (
-              // Fallback when bank list failed to load — replace hidden input value directly
               <input
                 placeholder="Bank code (e.g. 030)"
-                onChange={(e) => setSelectedBank(e.target.value)}
+                onChange={(e) => handleBankChange(e.target.value)}
                 className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
               />
             )}
@@ -160,23 +198,47 @@ export function PaymentsForm({
             </label>
             <input
               id="accountNumber"
-              name="accountNumber"
               inputMode="numeric"
-              maxLength={10}
-              placeholder="0123456789"
-              required
-              className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 font-mono text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
+              value={accountNumber}
+              onChange={(e) => handleAccountNumberChange(e.target.value)}
+              placeholder="Enter account number"
+              className={`h-10 w-full rounded-lg border bg-white px-3 font-mono text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors ${
+                verify.status === "verified"
+                  ? "border-emerald-400 focus:border-emerald-500"
+                  : verify.status === "error"
+                  ? "border-red-300 focus:border-red-400"
+                  : "border-[#E5E2DB] focus:border-[#B45309]"
+              }`}
             />
-            <p className="text-xs text-[#A8A29E]">10-digit account number</p>
+
+            {/* Verification feedback */}
+            {verify.status === "loading" && (
+              <div className="flex items-center gap-1.5 text-xs text-[#78716C]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Verifying account...
+              </div>
+            )}
+            {verify.status === "verified" && (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                {verify.accountName}
+              </div>
+            )}
+            {verify.status === "error" && (
+              <div className="flex items-center gap-1.5 text-xs text-red-600">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                {verify.message}
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={isPending || (!selectedBank && banks.length > 0)}
+            disabled={isPending || !canSubmit}
             className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
           >
             {isPending
-              ? "Verifying & connecting..."
+              ? "Connecting..."
               : isConnected
               ? "Update bank account"
               : "Connect bank account"}

@@ -12,7 +12,7 @@ export const generalSettingsSchema = z.object({
 
 export const paymentSettingsSchema = z.object({
   bankCode: z.string().min(1, "Please select a bank"),
-  accountNumber: z.string().regex(/^\d{10}$/, "Account number must be exactly 10 digits"),
+  accountNumber: z.string().regex(/^\d{6,}$/, "Account number must be at least 6 digits"),
 });
 
 export const subaccountCodeSchema = z.object({

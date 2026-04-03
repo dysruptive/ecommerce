@@ -56,6 +56,19 @@ export async function updateGeneralSettings(
 }
 
 
+export async function verifyBankAccount(
+  bankCode: string,
+  accountNumber: string,
+): Promise<{ success: true; accountName: string } | { success: false; error: string }> {
+  try {
+    const { resolveAccountNumber } = await import("@/lib/paystack");
+    const result = await resolveAccountNumber(accountNumber, bankCode);
+    return { success: true, accountName: result.accountName };
+  } catch {
+    return { success: false, error: "Could not verify account. Check the number and bank." };
+  }
+}
+
 export async function connectPaystackAccount(
   _prev: ActionResult | null,
   formData: FormData,
