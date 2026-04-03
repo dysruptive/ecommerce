@@ -14,8 +14,8 @@ export default async function DeliveryZonesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Delivery Zones"
-        description="Configure delivery areas and fees"
+        title="Delivery"
+        description="Choose how your store delivers orders to customers"
       />
       <DeliveryZonesList zones={JSON.parse(JSON.stringify(zones))} />
     </div>

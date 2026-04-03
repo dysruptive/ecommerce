@@ -21,7 +21,7 @@ interface DeliveryZone {
   name: string;
   type: string;
   regions: string | null;
-  fee: string | number;
+  fee: string | number | null;
 }
 
 interface CheckoutFormProps {
@@ -46,7 +46,8 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
   const [isApplyingDiscount, startApplyTransition] = useTransition();
 
   const selectedZone = deliveryZones.find((z) => z.id === selectedZoneId);
-  const deliveryFee = selectedZone ? Number(selectedZone.fee) : 0;
+  // Courier zones have no platform fee — the courier quotes the customer directly
+  const deliveryFee = selectedZone?.fee != null ? Number(selectedZone.fee) : 0;
   const discountAmount = appliedDiscount?.amount ?? 0;
   const total = subtotal + deliveryFee - discountAmount;
 
@@ -203,9 +204,13 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-medium">
-                    GHS {Number(zone.fee).toFixed(2)}
-                  </span>
+                  {zone.fee != null ? (
+                    <span className="text-sm font-medium tabular-nums">
+                      GHS {Number(zone.fee).toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Price varies</span>
+                  )}
                 </label>
               ))}
             </div>
@@ -352,7 +357,11 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
           <div className="flex justify-between text-sm">
             <span>Delivery</span>
             <span>
-              {selectedZone ? `GHS ${deliveryFee.toFixed(2)}` : "Select a zone"}
+              {!selectedZone
+                ? "Select an option"
+                : selectedZone.fee != null
+                ? `GHS ${deliveryFee.toFixed(2)}`
+                : "Quoted at delivery"}
             </span>
           </div>
           {discountAmount > 0 && (

@@ -256,7 +256,7 @@ model DeliveryZone {
   name      String
   type      DeliveryType @default(FIXED)
   regions   String?
-  fee       Decimal  @db.Decimal(10, 2)
+  fee       Decimal? @db.Decimal(10, 2)
   isActive  Boolean  @default(true)
   position  Int      @default(0)
   orders    Order[]

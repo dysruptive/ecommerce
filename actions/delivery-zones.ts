@@ -31,6 +31,18 @@ export async function createDeliveryZone(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
+    // Enforce mutual exclusivity: can't mix COURIER and FIXED zones
+    const existingType = await prisma.deliveryZone.findFirst({
+      where: { tenantId },
+      select: { type: true },
+    });
+    if (existingType && existingType.type !== parsed.data.type) {
+      return {
+        success: false,
+        error: `You already have ${existingType.type === "COURIER" ? "courier" : "fixed"} delivery options. Remove them first before switching to a different method.`,
+      };
+    }
+
     const maxPosition = await prisma.deliveryZone.aggregate({
       where: { tenantId },
       _max: { position: true },
