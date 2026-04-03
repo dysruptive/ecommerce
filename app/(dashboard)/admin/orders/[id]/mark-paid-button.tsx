@@ -1,25 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { markOrderAsPaid } from "@/actions/order-status";
 
 export function MarkPaidButton({ orderId }: { orderId: string }) {
   const [showRef, setShowRef] = useState(false);
   const [ref, setRef] = useState("");
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleMark() {
     setIsPending(true);
-    setError(null);
     const result = await markOrderAsPaid(orderId, ref || undefined);
     setIsPending(false);
-    if (!result.success) setError(result.error);
+    if (!result.success) toast.error(result.error);
+    else {
+      toast.success("Order marked as paid.");
+      setShowRef(false);
+      setRef("");
+    }
   }
 
   return (
     <div className="space-y-2">
-      {error && <p className="text-xs text-red-600">{error}</p>}
       {showRef ? (
         <div className="flex gap-2">
           <input

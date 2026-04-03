@@ -33,7 +33,7 @@ const STEPS = [
   {
     key: "paystack",
     label: "Connect Paystack",
-    description: "Add your subaccount code to accept payments",
+    description: "Enter your bank details to start accepting payments",
     href: "/admin/settings",
   },
 ] as const;

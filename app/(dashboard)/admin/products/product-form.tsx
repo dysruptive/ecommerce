@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -93,9 +94,15 @@ export function ProductForm({
     })) ?? [],
   );
 
-  if (state?.success) {
-    router.push("/admin/products");
-  }
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) {
+      toast.success(product ? "Product updated." : "Product created.");
+      router.push("/admin/products");
+    } else {
+      toast.error(state.error);
+    }
+  }, [state, router, product]);
 
   function addVariant() {
     setVariants((prev) => [...prev, emptyVariant()]);
@@ -130,9 +137,6 @@ export function ProductForm({
         )}
       />
 
-      {state?.success === false && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
-      )}
 
       {/* Details */}
       <div className={card}>

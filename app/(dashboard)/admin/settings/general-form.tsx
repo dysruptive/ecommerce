@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import Image from "next/image";
 import { Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { updateGeneralSettings, updateLogoUrl } from "@/actions/settings";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import type { Tenant } from "@/types";
@@ -14,20 +15,25 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
   const [state, formAction, isPending] = useActionState(updateGeneralSettings, null);
   const [logoUrl, setLogoUrl] = useState(tenant.logoUrl ?? "");
   const [logoUploading, setLogoUploading] = useState(false);
-  const [logoError, setLogoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) toast.success("Settings saved.");
+    else toast.error(state.error);
+  }, [state]);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setLogoUploading(true);
-    setLogoError(null);
     try {
       const result = await uploadToCloudinary(file, `stores/${tenant.slug}/logo`);
       setLogoUrl(result.secure_url);
       const saveResult = await updateLogoUrl(result.secure_url);
-      if (!saveResult.success) setLogoError(saveResult.error);
+      if (!saveResult.success) toast.error(saveResult.error);
+      else toast.success("Logo updated.");
     } catch (err) {
-      setLogoError(err instanceof Error ? err.message : "Logo upload failed.");
+      toast.error(err instanceof Error ? err.message : "Logo upload failed.");
     } finally {
       setLogoUploading(false);
       e.target.value = "";
@@ -36,7 +42,8 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
 
   async function removeLogo() {
     setLogoUrl("");
-    await updateLogoUrl("");
+    const result = await updateLogoUrl("");
+    if (!result.success) toast.error(result.error);
   }
 
   return (
@@ -47,13 +54,6 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
       </div>
       <div className="px-5 py-5">
         <form action={formAction} className="space-y-5">
-          {state?.success === false && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
-          )}
-          {state?.success === true && (
-            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">Settings saved.</div>
-          )}
-
           {/* Logo */}
           <div className="space-y-2">
             <label className={labelCls}>Store Logo</label>
@@ -81,7 +81,6 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
                 </span>
                 <input type="file" accept="image/*" className="hidden" disabled={logoUploading} onChange={handleLogoChange} />
               </label>
-              {logoError && <p className="text-xs text-red-600">{logoError}</p>}
             </div>
           </div>
 

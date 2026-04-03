@@ -4,10 +4,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
   generalSettingsSchema,
-  themeSettingsSchema,
-  notificationSettingsSchema,
   paymentSettingsSchema,
 } from "@/lib/validations/settings";
+import {
+  resolveAccountNumber,
+  createSubaccount,
+} from "@/lib/paystack";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -53,88 +55,65 @@ export async function updateGeneralSettings(
   }
 }
 
-export async function updateThemeSettings(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  try {
-    const tenantId = await getTenantId();
-    const parsed = themeSettingsSchema.safeParse({
-      primaryColor: formData.get("primaryColor"),
-      accentColor: formData.get("accentColor"),
-    });
 
-    if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0].message };
-    }
-
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: parsed.data,
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("updateThemeSettings error:", error);
-    return { success: false, error: "Failed to update theme." };
-  }
-}
-
-export async function updateNotificationSettings(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  try {
-    const tenantId = await getTenantId();
-    const parsed = notificationSettingsSchema.safeParse({
-      emailEnabled: formData.get("emailEnabled") === "on",
-      smsEnabled: formData.get("smsEnabled") === "on",
-    });
-
-    if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0].message };
-    }
-
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        emailEnabled: parsed.data.emailEnabled,
-        smsEnabled: parsed.data.smsEnabled,
-      },
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("updateNotificationSettings error:", error);
-    return { success: false, error: "Failed to update notifications." };
-  }
-}
-
-export async function updatePaymentSettings(
+export async function connectPaystackAccount(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
   try {
     const tenantId = await getTenantId();
     const parsed = paymentSettingsSchema.safeParse({
-      paystackSubaccountCode: formData.get("paystackSubaccountCode"),
+      bankCode: formData.get("bankCode"),
+      accountNumber: formData.get("accountNumber"),
     });
 
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true },
+    });
+    if (!tenant) return { success: false, error: "Tenant not found." };
+
+    let accountName: string;
+    try {
+      const resolved = await resolveAccountNumber(
+        parsed.data.accountNumber,
+        parsed.data.bankCode,
+      );
+      accountName = resolved.accountName;
+    } catch {
+      return {
+        success: false,
+        error: "Could not verify bank account. Check the account number and bank, then try again.",
+      };
+    }
+
+    let subaccountCode: string;
+    try {
+      subaccountCode = await createSubaccount({
+        businessName: tenant.name,
+        settlementBank: parsed.data.bankCode,
+        accountNumber: parsed.data.accountNumber,
+        percentageCharge: 0,
+        description: `${tenant.name} — ${accountName}`,
+      });
+    } catch (err) {
+      console.error("createSubaccount error:", err);
+      return { success: false, error: "Failed to create Paystack subaccount. Please try again." };
+    }
+
     await prisma.tenant.update({
       where: { id: tenantId },
-      data: {
-        paystackSubaccountCode: parsed.data.paystackSubaccountCode || null,
-      },
+      data: { paystackSubaccountCode: subaccountCode },
     });
 
     return { success: true };
   } catch (error) {
-    console.error("updatePaymentSettings error:", error);
-    return { success: false, error: "Failed to update payment settings." };
+    console.error("connectPaystackAccount error:", error);
+    return { success: false, error: "Failed to connect Paystack account." };
   }
 }
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { Truck, Bike } from "lucide-react";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 
 type ActionResult = { success: true } | { success: false; error: string } | null;
@@ -29,15 +30,16 @@ export function ZoneForm({ zone, action, onClose }: ZoneFormProps) {
   const [state, formAction, isPending] = useActionState(action, null);
   const [type, setType] = useState<"FIXED" | "COURIER">(zone?.type ?? "FIXED");
 
-  if (state?.success) onClose();
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) onClose();
+    else toast.error(state.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="type" value={type} />
-
-      {state?.success === false && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
-      )}
 
       <div className="space-y-2">
         <label className={labelCls}>Delivery Type</label>

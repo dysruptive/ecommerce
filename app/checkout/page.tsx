@@ -17,6 +17,8 @@ export default async function CheckoutPage() {
 
   if (CheckoutPage) return <CheckoutPage tenant={tenant} deliveryZones={zones} />;
 
+  const smsEnabled = !!process.env.ARKESEL_API_KEY;
+
   return (
     <StoreLayout tenant={tenant}>
       <div className="mx-auto max-w-3xl px-4 py-8">
@@ -24,8 +26,8 @@ export default async function CheckoutPage() {
         <CheckoutForm
           deliveryZones={zones}
           primaryColor={tenant.primaryColor}
-          emailEnabled={tenant.emailEnabled}
-          smsEnabled={tenant.smsEnabled}
+          emailEnabled={true}
+          smsEnabled={smsEnabled}
         />
       </div>
     </StoreLayout>

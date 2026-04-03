@@ -2,23 +2,20 @@
 
 import { useState } from "react";
 import { GeneralForm } from "./general-form";
-import { ThemeForm } from "./theme-form";
-import { NotificationsForm } from "./notifications-form";
 import { DomainInfo } from "./domain-info";
 import { PaymentsForm } from "./payments-form";
 import type { Tenant } from "@/types";
+import type { PaystackBank } from "@/lib/paystack";
 
 const TABS = [
   { key: "general", label: "General" },
-  { key: "theme", label: "Theme" },
   { key: "payments", label: "Payments" },
-  { key: "notifications", label: "Notifications" },
   { key: "domain", label: "Domain" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
 
-export function SettingsTabs({ tenant }: { tenant: Tenant }) {
+export function SettingsTabs({ tenant, banks }: { tenant: Tenant; banks: PaystackBank[] }) {
   const [active, setActive] = useState<TabKey>("general");
 
   return (
@@ -40,10 +37,8 @@ export function SettingsTabs({ tenant }: { tenant: Tenant }) {
       </div>
 
       {active === "general" && <GeneralForm tenant={tenant} />}
-      {active === "theme" && <ThemeForm tenant={tenant} />}
-      {active === "payments" && <PaymentsForm tenant={tenant} />}
-      {active === "notifications" && <NotificationsForm tenant={tenant} />}
-      {active === "domain" && <DomainInfo tenant={tenant} />}
+      {active === "payments" && <PaymentsForm tenant={tenant} banks={banks} />}
+{active === "domain" && <DomainInfo tenant={tenant} />}
     </div>
   );
 }

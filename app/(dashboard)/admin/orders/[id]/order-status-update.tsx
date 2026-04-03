@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -22,23 +23,24 @@ export function OrderStatusUpdate({
 }) {
   const [newStatus, setNewStatus] = useState("");
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const options = ALL_STATUSES.filter((s) => s !== currentStatus);
 
   async function handleUpdate() {
     if (!newStatus) return;
     setIsPending(true);
-    setError(null);
     const result = await updateOrderStatus(orderId, newStatus as OrderStatus);
     setIsPending(false);
-    if (!result.success) setError(result.error);
+    if (!result.success) toast.error(result.error);
+    else {
+      toast.success(`Status updated to ${newStatus.charAt(0) + newStatus.slice(1).toLowerCase()}.`);
+      setNewStatus("");
+    }
   }
 
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Update Status</p>
-      {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Select value={newStatus} onValueChange={setNewStatus}>
           <SelectTrigger className="h-9 flex-1 rounded-lg border-[#E5E2DB] bg-white text-sm text-[#1C1917] focus:ring-[#B45309]/20 focus:border-[#B45309]">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -50,13 +51,16 @@ function DiscountForm({
   onClose: () => void;
 }) {
   const [state, formAction, isPending] = useActionState(action, null);
-  if (state?.success) onClose();
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) onClose();
+    else toast.error(state.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <form action={formAction} className="space-y-4">
-      {state?.success === false && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
-      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label className={labelCls} htmlFor="d-code">Code</label>
@@ -201,7 +205,8 @@ export function DiscountsList({ discounts }: { discounts: Discount[] }) {
                         onClick={async () => {
                           if (confirm(`Delete "${d.code}"?`)) {
                             const result = await deleteDiscount(d.id);
-                            if (!result.success) alert(result.error);
+                            if (!result.success) toast.error(result.error);
+                            else toast.success(`"${d.code}" deleted.`);
                           }
                         }}
                       >

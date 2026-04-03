@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,10 @@ function EditCategoryDialog({ category }: { category: Category }) {
 
   if (state?.success) setOpen(false);
 
+  useEffect(() => {
+    if (state?.success === false) toast.error(state.error);
+  }, [state]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -38,9 +43,6 @@ function EditCategoryDialog({ category }: { category: Category }) {
           <DialogTitle className="text-[#1C1917]">Edit Category</DialogTitle>
         </DialogHeader>
         <form action={formAction} className="space-y-4">
-          {state?.success === false && (
-            <p className="text-sm text-red-600">{state.error}</p>
-          )}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#1C1917]">Name</label>
             <input name="name" className={inputCls} defaultValue={category.name} required />
@@ -62,6 +64,12 @@ function EditCategoryDialog({ category }: { category: Category }) {
 export function CategoriesDialog({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, isPending] = useActionState(createCategory, null);
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.success) toast.success("Category created.");
+    else toast.error(state.error);
+  }, [state]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -94,7 +102,8 @@ export function CategoriesDialog({ categories }: { categories: Category[] }) {
                       onClick={async () => {
                         if (confirm(`Delete "${cat.name}"?`)) {
                           const result = await deleteCategory(cat.id);
-                          if (!result.success) alert(result.error);
+                          if (!result.success) toast.error(result.error);
+                          else toast.success(`"${cat.name}" deleted.`);
                         }
                       }}
                     >
@@ -108,9 +117,6 @@ export function CategoriesDialog({ categories }: { categories: Category[] }) {
 
           <div className="border-t border-[#F5F3EE] pt-4">
             <form action={formAction} className="space-y-3">
-              {state?.success === false && (
-                <p className="text-sm text-red-600">{state.error}</p>
-              )}
               <label className="text-sm font-medium text-[#1C1917]">New Category</label>
               <div className="flex gap-2">
                 <input name="name" className={inputCls} placeholder="Category name" required />

@@ -42,10 +42,10 @@ export async function notifyOrderConfirmed(
   const emailData = buildOrderEmailData(order, tenant);
 
   // Email to customer
-  if (tenant.emailEnabled && order.notifyByEmail) {
+  if (order.notifyByEmail) {
     tasks.push(sendOrderConfirmationEmail(emailData));
 
-    // Email to store owner (always, if email is enabled for the store)
+    // Email to store owner
     const owner = await prisma.user.findFirst({
       where: { tenantId: tenant.id, role: "OWNER" },
       select: { email: true },
@@ -59,7 +59,7 @@ export async function notifyOrderConfirmed(
 
   // SMS to customer
   const arkeselApiKey = process.env.ARKESEL_API_KEY;
-  if (tenant.smsEnabled && order.notifyBySMS && arkeselApiKey && order.customer.phone) {
+  if (order.notifyBySMS && arkeselApiKey && order.customer.phone) {
     tasks.push(
       sendSMS(
         order.customer.phone,
@@ -105,7 +105,7 @@ export async function notifyOrderStatusUpdated(
 ) {
   const tasks: Promise<unknown>[] = [];
 
-  if (tenant.emailEnabled && order.notifyByEmail) {
+  if (order.notifyByEmail) {
     tasks.push(
       sendOrderStatusEmail({
         customerEmail: order.customer.email,
@@ -118,13 +118,7 @@ export async function notifyOrderStatusUpdated(
   }
 
   const arkeselApiKey = process.env.ARKESEL_API_KEY;
-  if (
-    tenant.smsEnabled &&
-    order.notifyBySMS &&
-    arkeselApiKey &&
-    order.customer.phone &&
-    newStatus === "SHIPPED"
-  ) {
+  if (order.notifyBySMS && arkeselApiKey && order.customer.phone && newStatus === "SHIPPED") {
     tasks.push(
       sendSMS(
         order.customer.phone,

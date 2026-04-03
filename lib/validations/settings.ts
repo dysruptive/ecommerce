@@ -8,16 +8,13 @@ export const generalSettingsSchema = z.object({
   address: z.string().max(200).optional().or(z.literal("")),
 });
 
-export const themeSettingsSchema = z.object({
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
-  accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
-});
 
-export const notificationSettingsSchema = z.object({
-  emailEnabled: z.boolean(),
-  smsEnabled: z.boolean(),
-});
 
 export const paymentSettingsSchema = z.object({
+  bankCode: z.string().min(1, "Please select a bank"),
+  accountNumber: z.string().regex(/^\d{10}$/, "Account number must be exactly 10 digits"),
+});
+
+export const subaccountCodeSchema = z.object({
   paystackSubaccountCode: z.string().max(100).optional().or(z.literal("")),
 });

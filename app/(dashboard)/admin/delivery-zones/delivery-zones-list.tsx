@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { Plus, Trash2, Pencil, GripVertical, Truck, Bike } from "lucide-react";
 import {
   Dialog,
@@ -21,7 +22,6 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
   const [zones, setZones] = useState(initialZones);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [reorderError, setReorderError] = useState<string | null>(null);
 
   const dragIndex = useRef<number | null>(null);
 
@@ -42,15 +42,13 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
 
   async function handleDragEnd() {
     dragIndex.current = null;
-    setReorderError(null);
     const result = await reorderDeliveryZones(zones.map((z) => z.id));
-    if (!result.success) setReorderError(result.error);
+    if (!result.success) toast.error(result.error);
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        {reorderError && <p className="text-sm text-red-600">{reorderError}</p>}
         <div className="ml-auto">
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
@@ -138,7 +136,8 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
                   onClick={async () => {
                     if (confirm(`Delete "${zone.name}"?`)) {
                       const result = await deleteDeliveryZone(zone.id);
-                      if (!result.success) alert(result.error);
+                      if (!result.success) toast.error(result.error);
+                      else toast.success(`"${zone.name}" deleted.`);
                     }
                   }}
                 >
