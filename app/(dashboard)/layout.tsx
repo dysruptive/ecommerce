@@ -1,9 +1,11 @@
-import { Store } from "lucide-react";
+import { Outfit } from "next/font/google";
 import { getTenantFromSession } from "@/lib/tenant";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Sidebar } from "@/components/dashboard/sidebar";
+import { AdminSidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export default async function DashboardLayout({
   children,
@@ -17,24 +19,29 @@ export default async function DashboardLayout({
   const tenant = await getTenantFromSession();
 
   return (
-    <div className="flex min-h-svh">
+    <div
+      className={`${outfit.variable} flex min-h-svh bg-[#F8F7F4]`}
+      style={{ fontFamily: "var(--font-outfit), system-ui, sans-serif" }}
+    >
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r lg:block">
-        <div className="flex h-14 items-center gap-2 border-b px-4">
-          <Store className="h-5 w-5" />
-          <span className="font-semibold">{tenant.name}</span>
+      <aside className="hidden w-56 shrink-0 lg:block">
+        <div className="fixed inset-y-0 left-0 w-56">
+          <AdminSidebar
+            storeName={tenant.name}
+            primaryColor={tenant.primaryColor}
+          />
         </div>
-        <Sidebar />
       </aside>
 
-      {/* Main area */}
-      <div className="flex flex-1 flex-col">
+      {/* Main */}
+      <div className="flex flex-1 flex-col min-w-0">
         <DashboardHeader
           storeName={tenant.name}
-          userName={session.user.name}
-          userEmail={session.user.email}
+          userName={session.user.name ?? ""}
+          userEmail={session.user.email ?? ""}
+          primaryColor={tenant.primaryColor}
         />
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-5 lg:p-7">{children}</main>
       </div>
     </div>
   );

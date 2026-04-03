@@ -3,10 +3,6 @@
 import { useState, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -15,12 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   ImageUpload,
   type UploadedImage,
@@ -67,6 +57,13 @@ interface ProductFormProps {
 function emptyVariant(): VariantRow {
   return { name: "", sku: "", price: "", stock: "0" };
 }
+
+const inputCls = "h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]";
+const labelCls = "block text-sm font-medium text-[#1C1917]";
+const card = "rounded-xl border border-[#E5E2DB] bg-white";
+const cardHeader = "border-b border-[#E5E2DB] px-5 py-4";
+const cardTitle = "text-sm font-semibold text-[#1C1917]";
+const cardBody = "px-5 py-5";
 
 export function ProductForm({
   categories,
@@ -115,17 +112,12 @@ export function ProductForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
-      {/* Hidden serialized images */}
+    <form action={formAction} className="space-y-5">
       <input
         type="hidden"
         name="imagesJson"
-        value={JSON.stringify(
-          images.map((img, i) => ({ ...img, position: i })),
-        )}
+        value={JSON.stringify(images.map((img, i) => ({ ...img, position: i })))}
       />
-
-      {/* Hidden serialized variants */}
       <input
         type="hidden"
         name="variantsJson"
@@ -139,236 +131,211 @@ export function ProductForm({
       />
 
       {state?.success === false && (
-        <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {state.error}
-        </div>
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              name="name"
-              defaultValue={product?.name ?? ""}
-              required
-            />
+      {/* Details */}
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Details</p></div>
+        <div className={`${cardBody} space-y-4`}>
+          <div className="space-y-1.5">
+            <label className={labelCls} htmlFor="name">Name</label>
+            <input id="name" name="name" className={inputCls} defaultValue={product?.name ?? ""} required />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
+          <div className="space-y-1.5">
+            <label className={labelCls} htmlFor="description">Description</label>
+            <textarea
               id="description"
               name="description"
-              defaultValue={product?.description ?? ""}
               rows={4}
+              className="w-full rounded-lg border border-[#E5E2DB] bg-white px-3 py-2.5 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309] resize-none"
+              defaultValue={product?.description ?? ""}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Images</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Images */}
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Images</p></div>
+        <div className={cardBody}>
           <ImageUpload
             images={images}
             onChange={setImages}
             folder={`stores/${tenantSlug}/products`}
             maxImages={5}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Pricing & Inventory</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Pricing & Inventory */}
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Pricing & Inventory</p></div>
+        <div className={`${cardBody} space-y-4`}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price (GHS)</Label>
-              <Input
+            <div className="space-y-1.5">
+              <label className={labelCls} htmlFor="price">Price (₵)</label>
+              <input
                 id="price"
                 name="price"
                 type="number"
                 step="0.01"
                 min="0"
+                className={inputCls}
                 defaultValue={product ? Number(product.price) : ""}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="compareAtPrice">Compare-at Price (GHS)</Label>
-              <Input
+            <div className="space-y-1.5">
+              <label className={labelCls} htmlFor="compareAtPrice">Compare-at Price (₵)</label>
+              <input
                 id="compareAtPrice"
                 name="compareAtPrice"
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={
-                  product?.compareAtPrice
-                    ? Number(product.compareAtPrice)
-                    : ""
-                }
+                className={inputCls}
+                defaultValue={product?.compareAtPrice ? Number(product.compareAtPrice) : ""}
               />
             </div>
           </div>
-
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="sku">SKU</Label>
-              <Input
-                id="sku"
-                name="sku"
-                defaultValue={product?.sku ?? ""}
-              />
+            <div className="space-y-1.5">
+              <label className={labelCls} htmlFor="sku">SKU</label>
+              <input id="sku" name="sku" className={inputCls} defaultValue={product?.sku ?? ""} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="stock">Stock</Label>
-              <Input
+            <div className="space-y-1.5">
+              <label className={labelCls} htmlFor="stock">Stock</label>
+              <input
                 id="stock"
                 name="stock"
                 type="number"
                 min="0"
+                className={inputCls}
                 defaultValue={product?.stock ?? 0}
                 required
               />
             </div>
-            <div className="flex items-end gap-2 pb-1">
-              <Switch
-                id="trackStock"
-                name="trackStock"
-                defaultChecked={product?.trackStock ?? true}
-              />
-              <Label htmlFor="trackStock">Track stock</Label>
+            <div className="flex items-end gap-3 pb-0.5">
+              <Switch id="trackStock" name="trackStock" defaultChecked={product?.trackStock ?? true} />
+              <label htmlFor="trackStock" className="text-sm text-[#1C1917]">Track stock</label>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="categoryId">Category</Label>
-            <Select
-              name="categoryId"
-              defaultValue={product?.categoryId ?? ""}
-            >
-              <SelectTrigger>
+      {/* Organization */}
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Organization</p></div>
+        <div className={`${cardBody} space-y-4`}>
+          <div className="space-y-1.5">
+            <label className={labelCls} htmlFor="categoryId">Category</label>
+            <Select name="categoryId" defaultValue={product?.categoryId ?? ""}>
+              <SelectTrigger className="h-10 rounded-lg border-[#E5E2DB] bg-white text-sm text-[#1C1917] focus:ring-[#B45309]/20">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-[#E5E2DB]">
                 {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
+                  <SelectItem key={cat.id} value={cat.id} className="text-sm focus:bg-[#FEF3C7] focus:text-[#92400E]">
                     {cat.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id="isPublished"
-              name="isPublished"
-              defaultChecked={product?.isPublished ?? false}
-            />
-            <Label htmlFor="isPublished">Published</Label>
+          <div className="flex items-center gap-3">
+            <Switch id="isPublished" name="isPublished" defaultChecked={product?.isPublished ?? false} />
+            <label htmlFor="isPublished" className="text-sm text-[#1C1917]">Published</label>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Variants</CardTitle>
-          <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+      {/* Variants */}
+      <div className={card}>
+        <div className={`${cardHeader} flex items-center justify-between`}>
+          <p className={cardTitle}>Variants</p>
+          <button
+            type="button"
+            onClick={addVariant}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E5E2DB] bg-white px-3 text-xs font-medium text-[#1C1917] hover:bg-[#F8F7F4]"
+          >
+            <Plus className="h-3.5 w-3.5" />
             Add Variant
-          </Button>
-        </CardHeader>
-        <CardContent>
+          </button>
+        </div>
+        <div className={cardBody}>
           {variants.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#A8A29E]">
               No variants. Add variants if this product comes in different sizes, colours, etc.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {variants.map((v, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 rounded-md border p-3"
+                  className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 rounded-xl border border-[#E5E2DB] p-3"
                 >
-                  <Input
+                  <input
                     placeholder="Name (e.g. Large / Red)"
                     value={v.name}
                     onChange={(e) => updateVariant(idx, "name", e.target.value)}
+                    className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
                     required
                   />
-                  <Input
+                  <input
                     placeholder="SKU"
                     value={v.sku}
                     onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                    className="w-24"
+                    className="h-9 w-24 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
                   />
-                  <Input
+                  <input
                     placeholder="Price"
                     type="number"
                     step="0.01"
                     min="0"
                     value={v.price}
                     onChange={(e) => updateVariant(idx, "price", e.target.value)}
-                    className="w-24"
+                    className="h-9 w-24 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
                     required
                   />
-                  <Input
+                  <input
                     placeholder="Stock"
                     type="number"
                     min="0"
                     value={v.stock}
                     onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                    className="w-20"
+                    className="h-9 w-20 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
                     required
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 text-destructive"
                     onClick={() => removeVariant(idx)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={isPending}>
-          {isPending
-            ? "Saving..."
-            : product
-              ? "Update Product"
-              : "Create Product"}
-        </Button>
-        <Button
+        <button
+          type="submit"
+          disabled={isPending}
+          className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
+        >
+          {isPending ? "Saving..." : product ? "Update Product" : "Create Product"}
+        </button>
+        <button
           type="button"
-          variant="outline"
           onClick={() => router.push("/admin/products")}
+          className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#78716C] hover:bg-[#F8F7F4]"
         >
           Cancel
-        </Button>
+        </button>
       </div>
     </form>
   );

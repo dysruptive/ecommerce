@@ -46,7 +46,7 @@ export function TemplateProductDetail({ tenant, product }: { tenant: Tenant; pro
                 </>
               )}
             </div>
-            {product.trackStock && (
+            {product.trackStock && product.variants.length === 0 && (
               <p className={`text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-600"}`}>
                 {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
               </p>

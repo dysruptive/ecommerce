@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Tenant } from "@/types";
 import { StoreLayout } from "@/components/store/store-layout";
 import { ImageGallery } from "@/components/store/image-gallery";
@@ -26,9 +27,9 @@ export function StyleHubProductDetail({ tenant, product }: { tenant: Tenant; pro
       <div className="mx-auto max-w-6xl px-4 py-10">
         {/* Breadcrumb */}
         <p className="mb-8 text-[11px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
-          <a href="/" className="hover:text-zinc-900">Home</a>
+          <Link href="/" className="hover:text-zinc-900">Home</Link>
           {" / "}
-          <a href="/products" className="hover:text-zinc-900">Shop</a>
+          <Link href="/products" className="hover:text-zinc-900">Shop</Link>
           {product.category && <>{" / "}<span className="text-zinc-900">{product.category.name}</span></>}
         </p>
 
@@ -58,7 +59,7 @@ export function StyleHubProductDetail({ tenant, product }: { tenant: Tenant; pro
               )}
             </div>
 
-            {product.trackStock && (
+            {product.trackStock && product.variants.length === 0 && (
               <p className={`mt-2 text-sm font-semibold ${product.stock > 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {product.stock > 0 ? `${product.stock} pieces available` : "Sold out"}
               </p>

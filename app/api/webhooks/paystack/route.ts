@@ -22,6 +22,26 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(body);
 
+    // Mark failed payment attempts
+    if (event.event === "charge.failure") {
+      const ref = event.data.reference as string;
+      await prisma.order.updateMany({
+        where: { paymentRef: ref, paymentStatus: "UNPAID" },
+        data: { paymentStatus: "FAILED" },
+      });
+      return NextResponse.json({ received: true });
+    }
+
+    // Handle refunds processed from the Paystack dashboard
+    if (event.event === "refund.processed") {
+      const ref = event.data.transaction_reference as string;
+      await prisma.order.updateMany({
+        where: { paymentRef: ref, paymentStatus: "PAID" },
+        data: { paymentStatus: "REFUNDED" },
+      });
+      return NextResponse.json({ received: true });
+    }
+
     if (event.event !== "charge.success") {
       return NextResponse.json({ received: true });
     }
@@ -66,40 +86,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Update order status
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        paymentStatus: "PAID",
-        paymentRef: reference,
-        status: "CONFIRMED",
-      },
-    });
+    // Build stock decrement operations
+    const stockOps = order.items
+      .filter((item) => item.product.trackStock)
+      .map((item) =>
+        item.variantId
+          ? prisma.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { decrement: item.quantity } },
+            })
+          : prisma.product.update({
+              where: { id: item.productId },
+              data: { stock: { decrement: item.quantity } },
+            }),
+      );
 
-    // Increment discount usage now that payment is confirmed
-    if (order.discountId) {
-      await prisma.discount.update({
-        where: { id: order.discountId },
-        data: { usedCount: { increment: 1 } },
-      });
-    }
-
-    // Reduce stock for each order item
-    for (const item of order.items) {
-      if (item.product.trackStock) {
-        if (item.variantId) {
-          await prisma.productVariant.update({
-            where: { id: item.variantId },
-            data: { stock: { decrement: item.quantity } },
-          });
-        } else {
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: { stock: { decrement: item.quantity } },
-          });
-        }
-      }
-    }
+    // Mark paid + discount count + stock decrements in one atomic transaction
+    await prisma.$transaction([
+      prisma.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: "PAID", paymentRef: reference, status: "CONFIRMED" },
+      }),
+      ...(order.discountId
+        ? [prisma.discount.update({
+            where: { id: order.discountId },
+            data: { usedCount: { increment: 1 } },
+          })]
+        : []),
+      ...stockOps,
+    ]);
 
     // Send notifications (fire-and-forget)
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });

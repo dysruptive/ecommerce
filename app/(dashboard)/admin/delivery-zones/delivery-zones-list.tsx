@@ -2,8 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Plus, Trash2, Pencil, GripVertical, Truck, Bike } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   createDeliveryZone,
   updateDeliveryZone,
@@ -53,114 +50,102 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        {reorderError && (
-          <p className="text-sm text-destructive">{reorderError}</p>
-        )}
+        {reorderError && <p className="text-sm text-red-600">{reorderError}</p>}
         <div className="ml-auto">
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
+              <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524]">
+                <Plus className="h-4 w-4" />
                 Add Option
-              </Button>
+              </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="border-[#E5E2DB] bg-white">
               <DialogHeader>
-                <DialogTitle>New Delivery Option</DialogTitle>
+                <DialogTitle className="text-[#1C1917]">New Delivery Option</DialogTitle>
               </DialogHeader>
-              <ZoneForm
-                action={createDeliveryZone}
-                onClose={() => setCreateOpen(false)}
-              />
+              <ZoneForm action={createDeliveryZone} onClose={() => setCreateOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
       {zones.length === 0 ? (
-        <div className="rounded-md border p-8 text-center text-sm text-muted-foreground">
-          No delivery options configured yet.
+        <div className="rounded-xl border border-[#E5E2DB] bg-white p-10 text-center">
+          <p className="text-sm text-[#A8A29E]">No delivery options configured yet.</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Drag to reorder — checkout displays options in this order.
-          </p>
+          <p className="text-xs text-[#A8A29E]">Drag to reorder — checkout displays options in this order.</p>
           {zones.map((zone, index) => (
-            <Card
+            <div
               key={zone.id}
               draggable
               onDragStart={() => handleDragStart(index)}
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
-              className="cursor-grab active:cursor-grabbing active:opacity-60"
+              className="flex cursor-grab items-center gap-3 rounded-xl border border-[#E5E2DB] bg-white px-4 py-3.5 active:cursor-grabbing active:opacity-60"
             >
-              <CardContent className="flex items-center gap-3 py-4">
-                <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    {zone.type === "COURIER" ? (
-                      <Bike className="h-3.5 w-3.5 text-muted-foreground" />
-                    ) : (
-                      <Truck className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">{zone.name}</span>
-                    <Badge variant={zone.isActive ? "default" : "secondary"}>
-                      {zone.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                    {zone.type === "COURIER" && (
-                      <Badge variant="outline">Courier</Badge>
-                    )}
-                  </div>
-                  {zone.type === "FIXED" && zone.regions && (
-                    <p className="truncate text-sm text-muted-foreground">
-                      {zone.regions}
-                    </p>
+              <GripVertical className="h-4 w-4 shrink-0 text-[#C8C4BD]" />
+
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <div className="flex items-center gap-2">
+                  {zone.type === "COURIER" ? (
+                    <Bike className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+                  ) : (
+                    <Truck className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+                  )}
+                  <span className="text-sm font-medium text-[#1C1917]">{zone.name}</span>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${zone.isActive ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"}`}>
+                    {zone.isActive ? "Active" : "Inactive"}
+                  </span>
+                  {zone.type === "COURIER" && (
+                    <span className="inline-flex rounded-full border border-[#E5E2DB] px-2 py-0.5 text-xs text-[#78716C]">
+                      Courier
+                    </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-medium">
-                    GHS {Number(zone.fee).toFixed(2)}
-                  </span>
-                  <Dialog
-                    open={editingId === zone.id}
-                    onOpenChange={(open) =>
-                      setEditingId(open ? zone.id : null)
+                {zone.type === "FIXED" && zone.regions && (
+                  <p className="truncate text-xs text-[#A8A29E]">{zone.regions}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold tabular-nums text-[#1C1917]">
+                  ₵{Number(zone.fee).toFixed(2)}
+                </span>
+
+                <Dialog open={editingId === zone.id} onOpenChange={(open) => setEditingId(open ? zone.id : null)}>
+                  <DialogTrigger asChild>
+                    <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-[#F0EDE8] hover:text-[#1C1917]">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="border-[#E5E2DB] bg-white">
+                    <DialogHeader>
+                      <DialogTitle className="text-[#1C1917]">Edit {zone.name}</DialogTitle>
+                    </DialogHeader>
+                    <ZoneForm
+                      zone={zone}
+                      action={updateDeliveryZone.bind(null, zone.id)}
+                      onClose={() => setEditingId(null)}
+                    />
+                  </DialogContent>
+                </Dialog>
+
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-red-50 hover:text-red-600"
+                  onClick={async () => {
+                    if (confirm(`Delete "${zone.name}"?`)) {
+                      const result = await deleteDeliveryZone(zone.id);
+                      if (!result.success) alert(result.error);
                     }
-                  >
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit {zone.name}</DialogTitle>
-                      </DialogHeader>
-                      <ZoneForm
-                        zone={zone}
-                        action={updateDeliveryZone.bind(null, zone.id)}
-                        onClose={() => setEditingId(null)}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={async () => {
-                      if (confirm(`Delete "${zone.name}"?`)) {
-                        const result = await deleteDeliveryZone(zone.id);
-                        if (!result.success) alert(result.error);
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}

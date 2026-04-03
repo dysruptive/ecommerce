@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Tenant } from "@/types";
 import { StoreLayout } from "@/components/store/store-layout";
 import { ImageGallery } from "@/components/store/image-gallery";
@@ -27,9 +28,9 @@ export function FreshMartProductDetail({ tenant, product }: { tenant: Tenant; pr
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Breadcrumb */}
         <p className="mb-6 text-xs text-gray-500">
-          <a href="/" className="hover:text-green-700">Home</a>
+          <Link href="/" className="hover:text-green-700">Home</Link>
           {" / "}
-          <a href="/products" className="hover:text-green-700">Products</a>
+          <Link href="/products" className="hover:text-green-700">Products</Link>
           {product.category && <>{" / "}<span className="text-gray-700">{product.category.name}</span></>}
         </p>
 
@@ -57,7 +58,7 @@ export function FreshMartProductDetail({ tenant, product }: { tenant: Tenant; pr
               )}
             </div>
 
-            {product.trackStock && (
+            {product.trackStock && product.variants.length === 0 && (
               <p className={`mt-2 flex items-center gap-1.5 text-sm font-medium ${product.stock > 0 ? "text-green-600" : "text-red-600"}`}>
                 <Leaf className="h-3.5 w-3.5" />
                 {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}

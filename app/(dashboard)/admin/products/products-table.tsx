@@ -2,22 +2,12 @@
 
 import Link from "next/link";
 import { MoreHorizontal, Pencil, Archive } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { archiveProduct } from "@/actions/products";
 
 interface Product {
@@ -32,57 +22,72 @@ interface Product {
 export function ProductsTable({ products }: { products: Product[] }) {
   if (products.length === 0) {
     return (
-      <div className="rounded-md border p-8 text-center text-sm text-muted-foreground">
-        No products yet. Create your first product to get started.
+      <div className="rounded-xl border border-[#E5E2DB] bg-white p-10 text-center">
+        <p className="text-sm text-[#A8A29E]">No products yet.</p>
+        <Link
+          href="/admin/products/new"
+          className="mt-2 inline-block text-sm font-medium text-[#B45309] hover:underline underline-offset-2"
+        >
+          Add your first product →
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-right">Price (GHS)</TableHead>
-            <TableHead className="text-right">Stock</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-10" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <div className="overflow-hidden rounded-xl border border-[#E5E2DB] bg-white">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-[#E5E2DB] bg-[#F8F7F4]">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Name</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Category</th>
+            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Price (₵)</th>
+            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Stock</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Status</th>
+            <th className="w-10 px-4 py-3" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#F5F3EE]">
           {products.map((product) => (
-            <TableRow key={product.id}>
-              <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {product.category?.name ?? "—"}
-              </TableCell>
-              <TableCell className="text-right">
+            <tr key={product.id} className="group hover:bg-[#FAFAF8]">
+              <td className="px-4 py-3.5">
+                <Link
+                  href={`/admin/products/${product.id}`}
+                  className="font-medium text-[#1C1917] hover:text-[#B45309]"
+                >
+                  {product.name}
+                </Link>
+              </td>
+              <td className="px-4 py-3.5 text-[#78716C]">
+                {product.category?.name ?? <span className="text-[#A8A29E]">—</span>}
+              </td>
+              <td className="px-4 py-3.5 text-right tabular-nums font-medium text-[#1C1917]">
                 {Number(product.price).toFixed(2)}
-              </TableCell>
-              <TableCell className="text-right">{product.stock}</TableCell>
-              <TableCell>
-                <Badge variant={product.isPublished ? "default" : "secondary"}>
+              </td>
+              <td className={`px-4 py-3.5 text-right tabular-nums font-medium ${product.stock <= 5 ? "text-red-600" : "text-[#1C1917]"}`}>
+                {product.stock}
+              </td>
+              <td className="px-4 py-3.5">
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${product.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"}`}>
                   {product.isPublished ? "Published" : "Draft"}
-                </Badge>
-              </TableCell>
-              <TableCell>
+                </span>
+              </td>
+              <td className="px-4 py-3.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-[#F0EDE8] hover:text-[#1C1917]">
                       <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="border-[#E5E2DB]">
                     <DropdownMenuItem asChild>
-                      <Link href={`/admin/products/${product.id}`}>
+                      <Link href={`/admin/products/${product.id}`} className="cursor-pointer">
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-destructive"
+                      className="text-red-600 focus:text-red-600"
                       onClick={async () => {
                         if (confirm("Archive this product?")) {
                           await archiveProduct(product.id);
@@ -94,11 +99,11 @@ export function ProductsTable({ products }: { products: Product[] }) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 }

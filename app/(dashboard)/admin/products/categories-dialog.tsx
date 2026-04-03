@@ -2,9 +2,6 @@
 
 import { useState, useActionState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -20,51 +17,41 @@ interface Category {
   _count: { products: number };
 }
 
+const inputCls = "h-9 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]";
+
 function EditCategoryDialog({ category }: { category: Category }) {
   const [open, setOpen] = useState(false);
   const boundUpdate = updateCategory.bind(null, category.id);
   const [state, formAction, isPending] = useActionState(boundUpdate, null);
 
-  if (state?.success) {
-    setOpen(false);
-  }
+  if (state?.success) setOpen(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        <button className="flex h-7 w-7 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-[#F0EDE8] hover:text-[#1C1917]">
           <Pencil className="h-3.5 w-3.5" />
-        </Button>
+        </button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="border-[#E5E2DB] bg-white">
         <DialogHeader>
-          <DialogTitle>Edit Category</DialogTitle>
+          <DialogTitle className="text-[#1C1917]">Edit Category</DialogTitle>
         </DialogHeader>
-        <form action={formAction} className="space-y-3">
+        <form action={formAction} className="space-y-4">
           {state?.success === false && (
-            <div className="text-sm text-destructive">{state.error}</div>
+            <p className="text-sm text-red-600">{state.error}</p>
           )}
-          <div className="space-y-2">
-            <Label htmlFor={`edit-name-${category.id}`}>Name</Label>
-            <Input
-              id={`edit-name-${category.id}`}
-              name="name"
-              defaultValue={category.name}
-              required
-            />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[#1C1917]">Name</label>
+            <input name="name" className={inputCls} defaultValue={category.name} required />
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={isPending} size="sm">
+            <button type="submit" disabled={isPending} className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50">
               {isPending ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setOpen(false)}
-            >
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#78716C] hover:bg-[#F8F7F4]">
               Cancel
-            </Button>
+            </button>
           </div>
         </form>
       </DialogContent>
@@ -72,46 +59,38 @@ function EditCategoryDialog({ category }: { category: Category }) {
   );
 }
 
-export function CategoriesDialog({
-  categories,
-}: {
-  categories: Category[];
-}) {
+export function CategoriesDialog({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, isPending] = useActionState(createCategory, null);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <button className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#1C1917] hover:bg-[#F8F7F4]">
           Manage Categories
-        </Button>
+        </button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="border-[#E5E2DB] bg-white">
         <DialogHeader>
-          <DialogTitle>Categories</DialogTitle>
+          <DialogTitle className="text-[#1C1917]">Categories</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {categories.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-lg border border-[#E5E2DB] px-3 py-2 text-sm"
                 >
-                  <span>
+                  <span className="text-[#1C1917]">
                     {cat.name}{" "}
-                    <span className="text-muted-foreground">
-                      ({cat._count.products})
-                    </span>
+                    <span className="text-[#A8A29E]">({cat._count.products})</span>
                   </span>
                   <div className="flex items-center gap-1">
                     <EditCategoryDialog category={cat} />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive"
+                    <button
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-red-50 hover:text-red-600"
                       onClick={async () => {
                         if (confirm(`Delete "${cat.name}"?`)) {
                           const result = await deleteCategory(cat.id);
@@ -120,33 +99,28 @@ export function CategoriesDialog({
                       }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          <form action={formAction} className="space-y-3">
-            {state?.success === false && (
-              <div className="text-sm text-destructive">{state.error}</div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="cat-name">New Category</Label>
+          <div className="border-t border-[#F5F3EE] pt-4">
+            <form action={formAction} className="space-y-3">
+              {state?.success === false && (
+                <p className="text-sm text-red-600">{state.error}</p>
+              )}
+              <label className="text-sm font-medium text-[#1C1917]">New Category</label>
               <div className="flex gap-2">
-                <Input
-                  id="cat-name"
-                  name="name"
-                  placeholder="Category name"
-                  required
-                />
+                <input name="name" className={inputCls} placeholder="Category name" required />
                 <input type="hidden" name="description" value="" />
-                <Button type="submit" disabled={isPending} size="sm">
+                <button type="submit" disabled={isPending} className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50 shrink-0">
                   {isPending ? "Adding..." : "Add"}
-                </Button>
+                </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

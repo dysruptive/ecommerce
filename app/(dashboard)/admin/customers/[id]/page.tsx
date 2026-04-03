@@ -3,20 +3,36 @@ import Link from "next/link";
 import { getTenantFromSession } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
+
+const STATUS_STYLES: Record<string, string> = {
+  PENDING: "bg-amber-50 text-amber-700",
+  CONFIRMED: "bg-blue-50 text-blue-700",
+  PROCESSING: "bg-violet-50 text-violet-700",
+  SHIPPED: "bg-indigo-50 text-indigo-700",
+  DELIVERED: "bg-emerald-50 text-emerald-700",
+  CANCELLED: "bg-red-50 text-red-700",
+  PAID: "bg-emerald-50 text-emerald-700",
+  UNPAID: "bg-amber-50 text-amber-700",
+  REFUNDED: "bg-rose-50 text-rose-700",
+  FAILED: "bg-red-50 text-red-700",
+};
+
+function Pill({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[status] ?? "bg-stone-50 text-stone-500"}`}>
+      {status.charAt(0) + status.slice(1).toLowerCase()}
+    </span>
+  );
+}
+
+const card = "rounded-xl border border-[#E5E2DB] bg-white";
+const cardHeader = "border-b border-[#E5E2DB] px-5 py-4";
+const cardTitle = "text-sm font-semibold text-[#1C1917]";
+const cardBody = "px-5 py-4";
 
 export default async function CustomerDetailPage({ params }: Props) {
   const { id } = await params;
@@ -24,11 +40,7 @@ export default async function CustomerDetailPage({ params }: Props) {
 
   const customer = await prisma.customer.findFirst({
     where: { id, tenantId: tenant.id },
-    include: {
-      orders: {
-        orderBy: { createdAt: "desc" },
-      },
-    },
+    include: { orders: { orderBy: { createdAt: "desc" } } },
   });
 
   if (!customer) notFound();
@@ -38,92 +50,86 @@ export default async function CustomerDetailPage({ params }: Props) {
     .reduce((sum, o) => sum + o.total.toNumber(), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader title={customer.name} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1 text-sm">
-          <p>
-            <span className="font-medium">Email:</span> {customer.email}
-          </p>
-          <p>
-            <span className="font-medium">Phone:</span>{" "}
-            {customer.phone ?? "—"}
-          </p>
-          <p>
-            <span className="font-medium">Orders:</span>{" "}
-            {customer.orders.length}
-          </p>
-          <p>
-            <span className="font-medium">Total Spent:</span> GHS{" "}
-            {totalSpent.toFixed(2)}
-          </p>
-          <p>
-            <span className="font-medium">Customer Since:</span>{" "}
-            {customer.createdAt.toLocaleDateString()}
-          </p>
-        </CardContent>
-      </Card>
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Contact Information</p></div>
+        <div className={`${cardBody} space-y-3 text-sm`}>
+          <div className="flex justify-between">
+            <span className="text-[#78716C]">Email</span>
+            <span className="font-medium text-[#1C1917]">{customer.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#78716C]">Phone</span>
+            <span className="font-medium text-[#1C1917]">{customer.phone ?? <span className="text-[#A8A29E]">—</span>}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#78716C]">Orders</span>
+            <span className="font-medium tabular-nums text-[#1C1917]">{customer.orders.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#78716C]">Total Spent</span>
+            <span className="font-semibold tabular-nums text-[#1C1917]">₵{totalSpent.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#78716C]">Customer Since</span>
+            <span className="text-[#A8A29E]">
+              {customer.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Order History</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className={card}>
+        <div className={cardHeader}><p className={cardTitle}>Order History</p></div>
+        <div className={cardBody}>
           {customer.orders.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No orders yet.</p>
+            <p className="text-sm text-[#A8A29E]">No orders yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#F5F3EE]">
+                  {["Order", "Total", "Payment", "Status", "Date"].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`pb-3 text-xs font-semibold uppercase tracking-wider text-[#A8A29E] ${i === 1 ? "text-right" : "text-left"}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F5F3EE]">
                 {customer.orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
+                  <tr key={order.id} className="hover:bg-[#FAFAF8]">
+                    <td className="py-3">
                       <Link
                         href={`/admin/orders/${order.id}`}
-                        className="font-medium hover:underline"
+                        className="font-semibold text-[#1C1917] hover:text-[#B45309]"
                       >
                         {order.orderNumber}
                       </Link>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      GHS {order.total.toNumber().toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          order.paymentStatus === "PAID"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {order.paymentStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{order.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {order.createdAt.toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="py-3 text-right tabular-nums font-medium text-[#1C1917]">
+                      ₵{order.total.toNumber().toFixed(2)}
+                    </td>
+                    <td className="py-3">
+                      <Pill status={order.paymentStatus} />
+                    </td>
+                    <td className="py-3">
+                      <Pill status={order.status} />
+                    </td>
+                    <td className="py-3 text-[#A8A29E]">
+                      {order.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

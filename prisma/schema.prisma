@@ -169,15 +169,16 @@ model ProductImage {
 // ─── ProductVariant ─────────────────────────────────────────
 
 model ProductVariant {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name      String
-  sku       String?
-  price     Decimal  @db.Decimal(10, 2)
-  stock     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String
+  sku        String?
+  price      Decimal     @db.Decimal(10, 2)
+  stock      Int         @default(0)
+  orderItems OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 // ─── Customer ───────────────────────────────────────────────
@@ -237,8 +238,9 @@ model OrderItem {
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
   variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   name      String
   price     Decimal  @db.Decimal(10, 2)
   quantity  Int

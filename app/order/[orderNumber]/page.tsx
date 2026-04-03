@@ -1,18 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { getCurrentTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { StoreLayout } from "@/components/store/store-layout";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { PaymentPoller } from "./payment-poller";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
@@ -24,11 +16,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
   const order = await prisma.order.findFirst({
     where: { tenantId: tenant.id, orderNumber },
-    include: {
-      items: true,
-      customer: true,
-      deliveryZone: true,
-    },
+    include: { items: true, customer: true, deliveryZone: true },
   });
 
   if (!order) notFound();
@@ -37,121 +25,121 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
   return (
     <StoreLayout tenant={tenant}>
-      <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="mb-8 text-center">
+      {!isPaid && <PaymentPoller />}
+
+      <div className="mx-auto max-w-xl px-4 py-10">
+        {/* Status banner */}
+        <div className={`mb-8 rounded-2xl p-6 text-center ${isPaid ? "bg-emerald-50" : "bg-amber-50"}`}>
           {isPaid ? (
-            <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+            <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-emerald-500" />
           ) : (
-            <Clock className="mx-auto h-16 w-16 text-yellow-500" />
+            <Clock className="mx-auto mb-3 h-12 w-12 animate-pulse text-amber-500" />
           )}
-          <h1 className="mt-4 text-2xl font-bold">
-            {isPaid ? "Thank You!" : "Order Received"}
+          <h1 className="text-xl font-bold text-gray-900">
+            {isPaid ? "Payment confirmed!" : "Waiting for payment…"}
           </h1>
-          <p className="mt-1 text-muted-foreground">
+          <p className="mt-1 text-sm text-gray-600">
             {isPaid
-              ? "Your payment has been confirmed."
-              : "We're waiting for your payment to be confirmed."}
+              ? `Your order ${order.orderNumber} is confirmed. We'll be in touch soon.`
+              : "This page will update automatically once your payment is processed."}
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Order #{order.orderNumber}</CardTitle>
-              <Badge
-                variant={isPaid ? "default" : "secondary"}
-              >
-                {order.paymentStatus}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Customer */}
+        {/* Order card */}
+        <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4">
             <div>
-              <p className="text-sm font-medium">Customer</p>
-              <p className="text-sm text-muted-foreground">
-                {order.customer.name} — {order.customer.email}
-              </p>
-              {order.customer.phone && (
-                <p className="text-sm text-muted-foreground">
-                  {order.customer.phone}
-                </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Order</p>
+              <p className="text-base font-bold text-gray-900">#{order.orderNumber}</p>
+            </div>
+            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+              isPaid
+                ? "bg-emerald-100 text-emerald-700"
+                : order.paymentStatus === "FAILED"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-amber-100 text-amber-700"
+            }`}>
+              {order.paymentStatus.charAt(0) + order.paymentStatus.slice(1).toLowerCase()}
+            </span>
+          </div>
+
+          {/* Customer */}
+          <div className="px-5 py-4">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">Customer</p>
+            <p className="text-sm font-medium text-gray-900">{order.customer.name}</p>
+            {order.customer.phone && (
+              <p className="text-sm text-gray-500">{order.customer.phone}</p>
+            )}
+          </div>
+
+          {/* Delivery */}
+          {order.deliveryZone && (
+            <div className="px-5 py-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">Delivery</p>
+              <p className="text-sm font-medium text-gray-900">{order.deliveryZone.name}</p>
+              {order.deliveryAddress && (
+                <p className="text-sm text-gray-500">{order.deliveryAddress}</p>
               )}
             </div>
+          )}
 
-            {/* Delivery */}
-            {order.deliveryZone && (
-              <div>
-                <p className="text-sm font-medium">Delivery</p>
-                <p className="text-sm text-muted-foreground">
-                  {order.deliveryZone.name} — {order.deliveryAddress}
-                </p>
-              </div>
-            )}
-
-            <Separator />
-
-            {/* Items */}
+          {/* Items */}
+          <div className="px-5 py-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Items</p>
             <div className="space-y-2">
               {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between text-sm"
-                >
-                  <span>
-                    {item.name} x {item.quantity}
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span className="text-gray-700">
+                    {item.name}
+                    <span className="ml-1 text-gray-400">× {item.quantity}</span>
                   </span>
-                  <span>
-                    GHS{" "}
-                    {(item.price.toNumber() * item.quantity).toFixed(2)}
+                  <span className="font-medium tabular-nums text-gray-900">
+                    ₵{(item.price.toNumber() * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
             </div>
+          </div>
 
-            <Separator />
-
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>GHS {order.subtotal.toNumber().toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>GHS {order.deliveryFee.toNumber().toFixed(2)}</span>
-              </div>
-              {order.discountAmount.toNumber() > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>
-                    -GHS {order.discountAmount.toNumber().toFixed(2)}
-                  </span>
-                </div>
-              )}
+          {/* Totals */}
+          <div className="space-y-1.5 px-5 py-4 text-sm">
+            <div className="flex justify-between text-gray-500">
+              <span>Subtotal</span>
+              <span className="tabular-nums">₵{order.subtotal.toNumber().toFixed(2)}</span>
             </div>
-
-            <Separator />
-
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total</span>
-              <span>GHS {order.total.toNumber().toFixed(2)}</span>
+            <div className="flex justify-between text-gray-500">
+              <span>Delivery</span>
+              <span className="tabular-nums">₵{order.deliveryFee.toNumber().toFixed(2)}</span>
             </div>
-
-            {order.customerNote && (
-              <div className="mt-2">
-                <p className="text-sm font-medium">Note</p>
-                <p className="text-sm text-muted-foreground">
-                  {order.customerNote}
-                </p>
+            {order.discountAmount.toNumber() > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>Discount</span>
+                <span className="tabular-nums">−₵{order.discountAmount.toNumber().toFixed(2)}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+            <div className="flex justify-between border-t border-gray-100 pt-2 font-bold text-gray-900">
+              <span>Total</span>
+              <span className="tabular-nums">₵{order.total.toNumber().toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Note */}
+          {order.customerNote && (
+            <div className="px-5 py-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">Note</p>
+              <p className="text-sm text-gray-600">{order.customerNote}</p>
+            </div>
+          )}
+        </div>
 
         <div className="mt-6 text-center">
-          <Button asChild variant="outline">
-            <Link href="/">Continue Shopping</Link>
-          </Button>
+          <Link
+            href="/products"
+            className="text-sm font-medium text-gray-500 hover:text-gray-900 underline-offset-2 hover:underline"
+          >
+            Continue shopping
+          </Link>
         </div>
       </div>
     </StoreLayout>

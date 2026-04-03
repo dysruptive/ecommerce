@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 import { GeneralForm } from "./general-form";
 import { ThemeForm } from "./theme-form";
 import { NotificationsForm } from "./notifications-form";
@@ -8,35 +8,42 @@ import { DomainInfo } from "./domain-info";
 import { PaymentsForm } from "./payments-form";
 import type { Tenant } from "@/types";
 
-interface SettingsTabsProps {
-  tenant: Tenant;
-}
+const TABS = [
+  { key: "general", label: "General" },
+  { key: "theme", label: "Theme" },
+  { key: "payments", label: "Payments" },
+  { key: "notifications", label: "Notifications" },
+  { key: "domain", label: "Domain" },
+] as const;
 
-export function SettingsTabs({ tenant }: SettingsTabsProps) {
+type TabKey = (typeof TABS)[number]["key"];
+
+export function SettingsTabs({ tenant }: { tenant: Tenant }) {
+  const [active, setActive] = useState<TabKey>("general");
+
   return (
-    <Tabs defaultValue="general">
-      <TabsList>
-        <TabsTrigger value="general">General</TabsTrigger>
-        <TabsTrigger value="theme">Theme</TabsTrigger>
-        <TabsTrigger value="payments">Payments</TabsTrigger>
-        <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        <TabsTrigger value="domain">Domain</TabsTrigger>
-      </TabsList>
-      <TabsContent value="general" className="mt-4">
-        <GeneralForm tenant={tenant} />
-      </TabsContent>
-      <TabsContent value="theme" className="mt-4">
-        <ThemeForm tenant={tenant} />
-      </TabsContent>
-      <TabsContent value="payments" className="mt-4">
-        <PaymentsForm tenant={tenant} />
-      </TabsContent>
-      <TabsContent value="notifications" className="mt-4">
-        <NotificationsForm tenant={tenant} />
-      </TabsContent>
-      <TabsContent value="domain" className="mt-4">
-        <DomainInfo tenant={tenant} />
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-5">
+      <div className="flex gap-1 rounded-xl border border-[#E5E2DB] bg-white p-1">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActive(tab.key)}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+              active === tab.key
+                ? "bg-[#FEF3C7] text-[#92400E]"
+                : "text-[#78716C] hover:text-[#1C1917]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {active === "general" && <GeneralForm tenant={tenant} />}
+      {active === "theme" && <ThemeForm tenant={tenant} />}
+      {active === "payments" && <PaymentsForm tenant={tenant} />}
+      {active === "notifications" && <NotificationsForm tenant={tenant} />}
+      {active === "domain" && <DomainInfo tenant={tenant} />}
+    </div>
   );
 }

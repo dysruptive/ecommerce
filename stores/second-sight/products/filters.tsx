@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Search } from "lucide-react";
 import {
   Select,
@@ -33,8 +33,6 @@ export function SecondSightFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(currentQuery ?? "");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -65,7 +63,7 @@ export function SecondSightFilters({
         />
       </form>
 
-      {mounted && categories.length > 0 && (
+      {categories.length > 0 && (
         <Select
           value={currentCategory ?? "all"}
           onValueChange={(v) => updateParam("category", v === "all" ? "" : v)}
@@ -86,8 +84,7 @@ export function SecondSightFilters({
         </Select>
       )}
 
-      {mounted && (
-        <Select
+      <Select
           value={currentSort ?? "newest"}
           onValueChange={(v) => updateParam("sort", v === "newest" ? "" : v)}
         >
@@ -106,7 +103,6 @@ export function SecondSightFilters({
             </SelectItem>
           </SelectContent>
         </Select>
-      )}
     </div>
   );
 }

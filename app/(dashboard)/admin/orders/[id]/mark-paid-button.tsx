@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { markOrderAsPaid } from "@/actions/order-status";
 
 export function MarkPaidButton({ orderId }: { orderId: string }) {
@@ -21,25 +19,36 @@ export function MarkPaidButton({ orderId }: { orderId: string }) {
 
   return (
     <div className="space-y-2">
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
       {showRef ? (
         <div className="flex gap-2">
-          <Input
+          <input
+            className="h-9 flex-1 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
             placeholder="Payment reference (optional)"
             value={ref}
             onChange={(e) => setRef(e.target.value)}
           />
-          <Button onClick={handleMark} disabled={isPending}>
+          <button
+            onClick={handleMark}
+            disabled={isPending}
+            className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
+          >
             {isPending ? "Saving..." : "Confirm"}
-          </Button>
-          <Button variant="ghost" onClick={() => setShowRef(false)}>
+          </button>
+          <button
+            onClick={() => setShowRef(false)}
+            className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-3 text-sm font-medium text-[#78716C] hover:bg-[#F8F7F4]"
+          >
             Cancel
-          </Button>
+          </button>
         </div>
       ) : (
-        <Button variant="outline" onClick={() => setShowRef(true)}>
+        <button
+          onClick={() => setShowRef(true)}
+          className="h-9 rounded-lg border border-[#E5E2DB] bg-white px-4 text-sm font-medium text-[#1C1917] hover:bg-[#F8F7F4]"
+        >
           Mark as Paid
-        </Button>
+        </button>
       )}
     </div>
   );

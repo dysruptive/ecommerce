@@ -35,6 +35,9 @@ export async function validateDiscountCode(
     if (!discount || !discount.isActive) {
       return { success: false, error: "Invalid or inactive discount code." };
     }
+    if (discount.startsAt && discount.startsAt > new Date()) {
+      return { success: false, error: "Discount code is not yet active." };
+    }
     if (discount.expiresAt && discount.expiresAt < new Date()) {
       return { success: false, error: "Discount code has expired." };
     }
@@ -163,6 +166,9 @@ export async function createCheckoutOrder(
 
       if (!discount || !discount.isActive) {
         return { success: false, error: "Invalid or inactive discount code." };
+      }
+      if (discount.startsAt && discount.startsAt > new Date()) {
+        return { success: false, error: "Discount code is not yet active." };
       }
       if (discount.expiresAt && discount.expiresAt < new Date()) {
         return { success: false, error: "Discount code has expired." };

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -33,35 +32,37 @@ export function OrderStatusUpdate({
     setError(null);
     const result = await updateOrderStatus(orderId, newStatus as OrderStatus);
     setIsPending(false);
-    if (!result.success) {
-      setError(result.error);
-    }
+    if (!result.success) setError(result.error);
   }
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">Update Status</p>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">Update Status</p>
+      {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Select value={newStatus} onValueChange={setNewStatus}>
-          <SelectTrigger className="flex-1">
+          <SelectTrigger className="h-9 flex-1 rounded-lg border-[#E5E2DB] bg-white text-sm text-[#1C1917] focus:ring-[#B45309]/20 focus:border-[#B45309]">
             <SelectValue placeholder="Select new status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-[#E5E2DB] shadow-sm">
             {options.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
+              <SelectItem key={s} value={s} className="text-sm text-[#1C1917] focus:bg-[#FEF3C7] focus:text-[#92400E]">
+                {s.charAt(0) + s.slice(1).toLowerCase()}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Button
+        <button
           onClick={handleUpdate}
           disabled={!newStatus || isPending}
-          variant={newStatus === "CANCELLED" ? "destructive" : "outline"}
+          className={`h-9 rounded-lg px-4 text-sm font-medium disabled:opacity-50 ${
+            newStatus === "CANCELLED"
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "border border-[#E5E2DB] bg-white text-[#1C1917] hover:bg-[#F8F7F4]"
+          }`}
         >
           {isPending ? "Updating..." : "Update"}
-        </Button>
+        </button>
       </div>
     </div>
   );

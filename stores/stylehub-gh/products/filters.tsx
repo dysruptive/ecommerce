@@ -18,7 +18,8 @@ export function StyleHubFilters({
 
   function setParam(key: string, value: string) {
     const p = new URLSearchParams(searchParams.toString());
-    value ? p.set(key, value) : p.delete(key);
+    if (value) p.set(key, value);
+    else p.delete(key);
     router.push(`${pathname}?${p.toString()}`);
   }
 

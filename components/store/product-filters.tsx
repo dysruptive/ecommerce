@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,8 +29,6 @@ export function ProductFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(currentQuery ?? "");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -44,8 +42,6 @@ export function ProductFilters({
     },
     [router, pathname, searchParams],
   );
-
-  if (!mounted) return <div className="flex h-10 flex-col gap-3 sm:flex-row sm:items-center" />;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

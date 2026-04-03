@@ -1,3 +1,5 @@
+import { createHmac } from "crypto";
+
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY ?? "";
 const PAYSTACK_BASE = "https://api.paystack.co";
 
@@ -79,22 +81,7 @@ export async function verifyTransaction(
   return res.json();
 }
 
-export function verifyWebhookSignature(
-  body: string,
-  signature: string,
-): boolean {
-  // Use Web Crypto API (works in both Node and Edge)
-  const crypto = globalThis.crypto ?? require("crypto");
-
-  if ("createHmac" in crypto) {
-    // Node.js crypto
-    const hash = (crypto as typeof import("crypto"))
-      .createHmac("sha512", PAYSTACK_SECRET_KEY)
-      .update(body)
-      .digest("hex");
-    return hash === signature;
-  }
-
-  // Fallback: can't do sync HMAC in Web Crypto, caller should handle
-  return false;
+export function verifyWebhookSignature(body: string, signature: string): boolean {
+  const hash = createHmac("sha512", PAYSTACK_SECRET_KEY).update(body).digest("hex");
+  return hash === signature;
 }

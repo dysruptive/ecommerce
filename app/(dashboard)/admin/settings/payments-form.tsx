@@ -2,79 +2,66 @@
 
 import { useActionState } from "react";
 import { updatePaymentSettings } from "@/actions/settings";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { Tenant } from "@/types";
 
 export function PaymentsForm({ tenant }: { tenant: Tenant }) {
-  const [state, formAction, isPending] = useActionState(
-    updatePaymentSettings,
-    null,
-  );
+  const [state, formAction, isPending] = useActionState(updatePaymentSettings, null);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Payments</CardTitle>
-        <CardDescription>
-          Paystack subaccount configuration. The platform admin creates the
-          subaccount on your behalf — paste the code here once it&apos;s ready.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={formAction} className="space-y-4">
+    <div className="rounded-xl border border-[#E5E2DB] bg-white">
+      <div className="border-b border-[#E5E2DB] px-5 py-4">
+        <p className="text-sm font-semibold text-[#1C1917]">Payments</p>
+        <p className="mt-0.5 text-xs text-[#78716C]">
+          Paystack subaccount configuration. The platform admin creates the subaccount on your behalf — paste the code here once it&apos;s ready.
+        </p>
+      </div>
+      <div className="px-5 py-5">
+        <form action={formAction} className="space-y-5">
           {state?.success === false && (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {state.error}
-            </div>
+            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</div>
           )}
           {state?.success === true && (
-            <div className="rounded-md bg-green-500/10 px-3 py-2 text-sm text-green-700">
-              Payment settings saved.
-            </div>
+            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">Payment settings saved.</div>
           )}
 
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">Status</span>
+            <span className="text-sm font-medium text-[#1C1917]">Status</span>
             {tenant.paystackSubaccountCode ? (
-              <Badge className="bg-green-500 hover:bg-green-500">
+              <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                 Connected
-              </Badge>
+              </span>
             ) : (
-              <Badge variant="secondary">Not configured</Badge>
+              <span className="inline-flex rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-500">
+                Not configured
+              </span>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="paystackSubaccountCode">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[#1C1917]" htmlFor="paystackSubaccountCode">
               Paystack Subaccount Code
-            </Label>
-            <Input
+            </label>
+            <input
               id="paystackSubaccountCode"
               name="paystackSubaccountCode"
               placeholder="ACCT_xxxxxxxxxxxxxxxxx"
               defaultValue={tenant.paystackSubaccountCode ?? ""}
+              className="h-10 w-full rounded-lg border border-[#E5E2DB] bg-white px-3 font-mono text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none focus:border-[#B45309]"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[#A8A29E]">
               Found in your Paystack dashboard under Settings → Subaccounts.
-              Payments from your store will be split to this subaccount.
             </p>
           </div>
 
-          <Button type="submit" disabled={isPending}>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="h-9 rounded-lg bg-[#1C1917] px-5 text-sm font-medium text-white hover:bg-[#292524] disabled:opacity-50"
+          >
             {isPending ? "Saving..." : "Save"}
-          </Button>
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
