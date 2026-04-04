@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { z } from "zod";
 import { useCart } from "@/hooks/use-cart";
 import { createCheckoutOrder, validateDiscountCode } from "@/actions/orders";
+import { checkoutSchema } from "@/lib/validations/order";
 import type { DeliveryZoneData } from "@/stores/registry";
 import type { Tenant } from "@/types";
 
@@ -18,7 +21,6 @@ export function SecondSightCheckoutContent({ tenant, deliveryZones, smsEnabled }
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number; message: string } | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isApplyingDiscount, startApplyTransition] = useTransition();
 
@@ -55,27 +57,50 @@ export function SecondSightCheckoutContent({ tenant, deliveryZones, smsEnabled }
     });
   }
 
-  function handleSubmit(formData: FormData) {
-    setError(null);
+  const schema = checkoutSchema.extend({
+    deliveryZoneId: deliveryZones.length > 0
+      ? z.string().min(1, "Please select a delivery zone")
+      : z.string().optional(),
+  });
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     if (appliedDiscount) formData.set("discountCode", appliedDiscount.code);
+
+    const parsed = schema.safeParse({
+      customerName: formData.get("customerName"),
+      customerEmail: formData.get("customerEmail") || "",
+      customerPhone: formData.get("customerPhone"),
+      deliveryAddress: formData.get("deliveryAddress"),
+      deliveryZoneId: selectedZoneId,
+      discountCode: formData.get("discountCode") || "",
+      customerNote: formData.get("customerNote") || "",
+      notifyByEmail: formData.get("notifyByEmail"),
+      notifyBySMS: formData.get("notifyBySMS"),
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return;
+    }
+
     startTransition(async () => {
       const result = await createCheckoutOrder(JSON.stringify(items), formData);
       if (result.success) {
         clearCart();
         window.location.href = result.authorizationUrl;
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     });
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
         {/* Left — form */}
         <div className="space-y-12 lg:col-span-7">
-          {error && <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-
           {/* Details */}
           <div>
             <p className={sectionHeadingCls}>Your Details</p>

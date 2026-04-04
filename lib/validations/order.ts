@@ -5,7 +5,7 @@ export const checkoutSchema = z.object({
   customerEmail: z.string().email("Please enter a valid email").optional().or(z.literal("")),
   customerPhone: z.string().min(1, "Phone number is required").max(20),
   deliveryAddress: z.string().min(1, "Delivery address is required").max(500),
-  deliveryZoneId: z.string().min(1, "Please select a delivery zone"),
+  deliveryZoneId: z.string().optional().or(z.literal("")),
   discountCode: z.string().max(50).optional().or(z.literal("")),
   customerNote: z.string().max(500).optional().or(z.literal("")),
   notifyByEmail: z.preprocess((v) => v === "on", z.boolean()).default(false),

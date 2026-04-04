@@ -13,8 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
+import { z } from "zod";
 import { useCart } from "@/hooks/use-cart";
 import { createCheckoutOrder, validateDiscountCode } from "@/actions/orders";
+import { checkoutSchema } from "@/lib/validations/order";
 
 interface DeliveryZone {
   id: string;
@@ -41,7 +44,6 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
     message: string;
   } | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isApplyingDiscount, startApplyTransition] = useTransition();
 
@@ -87,30 +89,47 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
     setDiscountError(null);
   }
 
-  function handleSubmit(formData: FormData) {
-    setError(null);
-    // Inject the validated discount code into the form data
-    if (appliedDiscount) {
-      formData.set("discountCode", appliedDiscount.code);
+  const schema = checkoutSchema.extend({
+    deliveryZoneId: deliveryZones.length > 0
+      ? z.string().min(1, "Please select a delivery zone")
+      : z.string().optional(),
+  });
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    if (appliedDiscount) formData.set("discountCode", appliedDiscount.code);
+
+    const parsed = schema.safeParse({
+      customerName: formData.get("customerName"),
+      customerEmail: formData.get("customerEmail") || "",
+      customerPhone: formData.get("customerPhone"),
+      deliveryAddress: formData.get("deliveryAddress"),
+      deliveryZoneId: selectedZoneId,
+      discountCode: formData.get("discountCode") || "",
+      customerNote: formData.get("customerNote") || "",
+      notifyByEmail: formData.get("notifyByEmail"),
+      notifyBySMS: formData.get("notifyBySMS"),
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return;
     }
+
     startTransition(async () => {
       const result = await createCheckoutOrder(JSON.stringify(items), formData);
       if (result.success) {
         clearCart();
         window.location.href = result.authorizationUrl;
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     });
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-6">
 
       {/* Customer Info */}
       <Card>

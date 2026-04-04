@@ -142,15 +142,19 @@ export async function createCheckoutOrder(
       }
     }
 
-    // Validate delivery zone
-    const deliveryZone = await prisma.deliveryZone.findFirst({
-      where: { id: parsed.data.deliveryZoneId, tenantId: tenant.id, isActive: true },
-    });
-    if (!deliveryZone) {
-      return { success: false, error: "Invalid delivery zone." };
+    // Validate delivery zone (optional — some stores have no zones configured)
+    let deliveryZone = null;
+    let deliveryFee = 0;
+    if (parsed.data.deliveryZoneId) {
+      deliveryZone = await prisma.deliveryZone.findFirst({
+        where: { id: parsed.data.deliveryZoneId, tenantId: tenant.id, isActive: true },
+      });
+      if (!deliveryZone) {
+        return { success: false, error: "Invalid delivery zone." };
+      }
+      // Courier zones have no platform fee — the courier charges the customer directly
+      deliveryFee = deliveryZone.fee != null ? deliveryZone.fee.toNumber() : 0;
     }
-    // Courier zones have no platform fee — the courier charges the customer directly
-    const deliveryFee = deliveryZone.fee != null ? deliveryZone.fee.toNumber() : 0;
 
     // Apply discount if provided
     let discountAmount = 0;
@@ -243,7 +247,7 @@ export async function createCheckoutOrder(
         deliveryFee,
         discountAmount,
         total,
-        deliveryZoneId: deliveryZone.id,
+        deliveryZoneId: deliveryZone?.id ?? null,
         discountId: appliedDiscountId,
         deliveryAddress: parsed.data.deliveryAddress,
         customerNote: parsed.data.customerNote || null,
