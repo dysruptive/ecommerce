@@ -208,6 +208,15 @@ These patterns immediately signal generic AI output — avoid all of them:
 - Micro-details: hover states that reveal price, image zoom on hover, smooth skeleton loaders
 - Actual Ghanaian context where relevant — currency (₵), city names in delivery copy, local imagery
 
+**Never fabricate store content**
+These are real stores with real customers. Do not invent anything that hasn't been explicitly confirmed:
+- No made-up collection names (e.g. "The Clarity Collection", "The Signature Edit")
+- No invented labels like "Seasonal Icons" or "New Season Premiere"
+- No unconfirmed promises — do not write "Free Delivery", "30-Day Returns", or any policy copy unless the store owner has confirmed it
+- No location-specific claims (e.g. "crafted for Accra") unless explicitly briefed
+- No placeholder image blocks — if there's no real image, design around the absence rather than leaving empty coloured boxes
+- If you don't have the real copy, ask. Do not fill the gap with something plausible-sounding.
+
 **Typography rules**
 - Pick the heading font based on the brand adjectives: geometric sans (modern/minimal), humanist sans (friendly/local), serif (premium/editorial)
 - Body text: minimum `text-base` (16px), `leading-relaxed`, never pure black — use `zinc-800` or `neutral-700`
