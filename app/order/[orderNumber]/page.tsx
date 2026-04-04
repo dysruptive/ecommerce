@@ -3,16 +3,47 @@ import Link from "next/link";
 import { CheckCircle2, Clock } from "lucide-react";
 import { getCurrentTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
+import { verifyTransaction } from "@/lib/paystack";
 import { StoreLayout } from "@/components/store/store-layout";
 import { PaymentPoller } from "./payment-poller";
 
 interface Props {
   params: Promise<{ orderNumber: string }>;
+  searchParams: Promise<{ trxref?: string; reference?: string }>;
 }
 
-export default async function OrderConfirmationPage({ params }: Props) {
+export default async function OrderConfirmationPage({ params, searchParams }: Props) {
   const { orderNumber } = await params;
+  const { trxref, reference } = await searchParams;
   const tenant = await getCurrentTenant();
+
+  // Fallback: if Paystack redirected with a reference and the order is still
+  // unpaid, verify directly with Paystack and update the order. This handles
+  // the case where the webhook was delayed or never delivered.
+  const paystackRef = reference ?? trxref;
+  if (paystackRef) {
+    try {
+      const pendingOrder = await prisma.order.findFirst({
+        where: { tenantId: tenant.id, orderNumber, paymentStatus: "UNPAID" },
+      });
+
+      if (pendingOrder && pendingOrder.paymentRef === paystackRef) {
+        const verification = await verifyTransaction(paystackRef);
+        if (
+          verification.data.status === "success" &&
+          verification.data.amount === Math.round(pendingOrder.total.toNumber() * 100)
+        ) {
+          await prisma.order.update({
+            where: { id: pendingOrder.id },
+            data: { paymentStatus: "PAID", status: "CONFIRMED" },
+          });
+        }
+      }
+    } catch (err) {
+      // Non-fatal — fall through and show whatever the current DB state is
+      console.error("Callback verification error:", err);
+    }
+  }
 
   const order = await prisma.order.findFirst({
     where: { tenantId: tenant.id, orderNumber },
@@ -27,7 +58,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
     <StoreLayout tenant={tenant}>
       {!isPaid && <PaymentPoller />}
 
-      <div className="mx-auto max-w-xl px-4 py-10">
+      <div className="mx-auto max-w-xl px-4 pb-10 pt-24">
         {/* Status banner */}
         <div className={`mb-8 rounded-2xl p-6 text-center ${isPaid ? "bg-emerald-50" : "bg-amber-50"}`}>
           {isPaid ? (
