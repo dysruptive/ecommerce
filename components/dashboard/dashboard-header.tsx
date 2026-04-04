@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AdminSidebar } from "@/components/dashboard/sidebar";
+import { signOutAction } from "@/actions/auth";
 
 interface DashboardHeaderProps {
   storeName: string;
@@ -80,7 +81,7 @@ export function DashboardHeader({
             <p className="text-xs text-[#78716C] truncate">{userEmail}</p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-[#E5E2DB]" />
-          <form action="/api/auth/signout" method="POST">
+          <form action={signOutAction}>
             <DropdownMenuItem asChild>
               <button
                 type="submit"

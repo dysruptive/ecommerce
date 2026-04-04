@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Store, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/actions/auth";
 
 const navItems = [
   { href: "/platform", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -65,7 +66,7 @@ export function PlatformSidebar({ userName, userEmail }: PlatformSidebarProps) {
             <p className="truncate text-xs font-medium text-zinc-200">{userName}</p>
             <p className="truncate text-[11px] text-zinc-500">{userEmail}</p>
           </div>
-          <form action="/api/auth/signout" method="POST">
+          <form action={signOutAction}>
             <button
               type="submit"
               className="flex h-7 w-7 items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
