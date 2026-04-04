@@ -26,6 +26,7 @@ import {
   ProductVariantsSection,
   type VariantRow,
 } from "./product-variants-section";
+import { VariantAIHelper } from "./variant-ai-helper";
 import { createCategoryInline } from "@/actions/categories";
 
 interface Category {
@@ -209,8 +210,11 @@ export function ProductForm({
 
           {/* Variants card */}
           <div className={card}>
-            <div className={cardHeader}>
+            <div className={`${cardHeader} flex items-center justify-between`}>
               <p className={cardTitle}>Variants</p>
+              <VariantAIHelper
+                onApply={(rows) => setVariants(rows)}
+              />
             </div>
             <div className={cardBody}>
               <ProductVariantsSection
