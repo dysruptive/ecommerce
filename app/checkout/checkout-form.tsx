@@ -120,8 +120,8 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
     startTransition(async () => {
       const result = await createCheckoutOrder(JSON.stringify(items), formData);
       if (result.success) {
-        clearCart();
         window.location.href = result.authorizationUrl;
+        clearCart();
       } else {
         toast.error(result.error);
       }
