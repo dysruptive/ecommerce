@@ -123,6 +123,7 @@ import { SecondSightPage } from "@/stores/second-sight/page";
 import { SecondSightProductsListing } from "@/stores/second-sight/products/listing";
 import { SecondSightProductDetail } from "@/stores/second-sight/products/detail";
 import { SecondSightCartPage } from "@/stores/second-sight/cart/index";
+import { SecondSightCheckoutPage } from "@/stores/second-sight/checkout/index";
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 
@@ -148,5 +149,6 @@ export const STORE_REGISTRY: Record<string, StoreConfig> = {
     ProductsPage: SecondSightProductsListing,
     DetailPage: SecondSightProductDetail,
     CartPage: SecondSightCartPage,
+    CheckoutPage: SecondSightCheckoutPage,
   },
 };

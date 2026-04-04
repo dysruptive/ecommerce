@@ -169,7 +169,7 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
           </div>
 
           <div className="space-y-2">
-            <Label>Delivery Zone</Label>
+            <Label>{deliveryZones[0]?.type === "COURIER" ? "Courier Service" : "Delivery Zone"}</Label>
             <input type="hidden" name="deliveryZoneId" value={selectedZoneId} />
             <div className="space-y-2">
               {deliveryZones.map((zone) => (
