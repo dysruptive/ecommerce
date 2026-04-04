@@ -24,7 +24,7 @@ export function SecondSightProductDetail({ tenant, product }: { tenant: Tenant; 
 
   return (
     <StoreLayout tenant={tenant}>
-      <div className="bg-[#f5f5f5] px-6 py-4 lg:px-8">
+      <div className="bg-[#f5f5f5] px-6 pb-4 pt-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-[11px] text-gray-400">
             <Link href="/" className="hover:text-gray-700">Home</Link>
