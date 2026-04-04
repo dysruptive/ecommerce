@@ -89,12 +89,12 @@ export async function createCheckoutOrder(
     // Parse and validate form data
     const parsed = checkoutSchema.safeParse({
       customerName: formData.get("customerName"),
-      customerEmail: formData.get("customerEmail"),
+      customerEmail: formData.get("customerEmail") ?? "",
       customerPhone: formData.get("customerPhone"),
       deliveryAddress: formData.get("deliveryAddress"),
-      deliveryZoneId: formData.get("deliveryZoneId"),
-      discountCode: formData.get("discountCode"),
-      customerNote: formData.get("customerNote"),
+      deliveryZoneId: formData.get("deliveryZoneId") ?? "",
+      discountCode: formData.get("discountCode") ?? "",
+      customerNote: formData.get("customerNote") ?? "",
       notifyByEmail: formData.get("notifyByEmail"),
       notifyBySMS: formData.get("notifyBySMS"),
     });
