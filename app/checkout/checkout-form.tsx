@@ -168,53 +168,55 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>{deliveryZones[0]?.type === "COURIER" ? "Courier Service" : "Delivery Zone"}</Label>
-            <input type="hidden" name="deliveryZoneId" value={selectedZoneId} />
+          <input type="hidden" name="deliveryZoneId" value={selectedZoneId} />
+          {deliveryZones.length > 0 && (
             <div className="space-y-2">
-              {deliveryZones.map((zone) => (
-                <label
-                  key={zone.id}
-                  className={`flex cursor-pointer items-center justify-between rounded-md border p-3 transition-colors ${
-                    selectedZoneId === zone.id
-                      ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="_zone"
-                      value={zone.id}
-                      checked={selectedZoneId === zone.id}
-                      onChange={() => setSelectedZoneId(zone.id)}
-                      className="accent-[var(--store-primary)]"
-                    />
-                    <div>
-                      <p className="text-sm font-medium">{zone.name}</p>
-                      {zone.type === "FIXED" && zone.regions && (
-                        <p className="text-xs text-muted-foreground">
-                          {zone.regions}
-                        </p>
-                      )}
-                      {zone.type === "COURIER" && (
-                        <p className="text-xs text-muted-foreground">
-                          We will book a courier to deliver to your address
-                        </p>
-                      )}
+              <Label>{deliveryZones[0].type === "COURIER" ? "Courier Service" : "Delivery Zone"}</Label>
+              <div className="space-y-2">
+                {deliveryZones.map((zone) => (
+                  <label
+                    key={zone.id}
+                    className={`flex cursor-pointer items-center justify-between rounded-md border p-3 transition-colors ${
+                      selectedZoneId === zone.id
+                        ? "border-[var(--store-primary)] bg-[var(--store-primary)]/5"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="_zone"
+                        value={zone.id}
+                        checked={selectedZoneId === zone.id}
+                        onChange={() => setSelectedZoneId(zone.id)}
+                        className="accent-[var(--store-primary)]"
+                      />
+                      <div>
+                        <p className="text-sm font-medium">{zone.name}</p>
+                        {zone.type === "FIXED" && zone.regions && (
+                          <p className="text-xs text-muted-foreground">
+                            {zone.regions}
+                          </p>
+                        )}
+                        {zone.type === "COURIER" && (
+                          <p className="text-xs text-muted-foreground">
+                            We will book a courier to deliver to your address
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {zone.fee != null ? (
-                    <span className="text-sm font-medium tabular-nums">
-                      GHS {Number(zone.fee).toFixed(2)}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Price varies</span>
-                  )}
-                </label>
-              ))}
+                    {zone.fee != null ? (
+                      <span className="text-sm font-medium tabular-nums">
+                        GHS {Number(zone.fee).toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Price varies</span>
+                    )}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -382,7 +384,7 @@ export function CheckoutForm({ deliveryZones, primaryColor, emailEnabled, smsEna
         type="submit"
         className="w-full py-6 text-base"
         style={{ backgroundColor: primaryColor, color: "white" }}
-        disabled={isPending || !selectedZoneId}
+        disabled={isPending || (deliveryZones.length > 0 && !selectedZoneId)}
       >
         {isPending ? "Processing..." : `Pay GHS ${total.toFixed(2)} with Paystack`}
       </Button>

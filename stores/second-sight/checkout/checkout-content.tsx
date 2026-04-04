@@ -106,26 +106,28 @@ export function SecondSightCheckoutContent({ tenant, deliveryZones, smsEnabled }
                 <textarea name="deliveryAddress" required rows={3} className={`${inputCls} resize-none`} placeholder="Street, area, landmark..." />
               </div>
               <input type="hidden" name="deliveryZoneId" value={selectedZoneId} />
-              <div>
-                <p className={labelCls}>{deliveryZones[0]?.type === "COURIER" ? "Courier Service *" : "Delivery Zone *"}</p>
-                <div className="mt-2 space-y-2">
-                  {deliveryZones.map((zone) => (
-                    <label key={zone.id} className={`flex cursor-pointer items-center justify-between border px-4 py-3.5 transition-colors ${selectedZoneId === zone.id ? "border-[#6c5e06] bg-[#f0ede8]" : "border-[#cdc6b3]/50 hover:bg-[#f0ede8]/50"}`}>
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="_zone" value={zone.id} checked={selectedZoneId === zone.id} onChange={() => setSelectedZoneId(zone.id)} className="accent-[#6c5e06]" />
-                        <div>
-                          <p className="text-sm font-medium text-[#1a1c1b]">{zone.name}</p>
-                          {zone.type === "FIXED" && zone.regions && <p className="text-xs text-[#5f5e5e]">{zone.regions}</p>}
-                          {zone.type === "COURIER" && <p className="text-xs text-[#5f5e5e]">Courier delivery to your address</p>}
+              {deliveryZones.length > 0 && (
+                <div>
+                  <p className={labelCls}>{deliveryZones[0].type === "COURIER" ? "Courier Service *" : "Delivery Zone *"}</p>
+                  <div className="mt-2 space-y-2">
+                    {deliveryZones.map((zone) => (
+                      <label key={zone.id} className={`flex cursor-pointer items-center justify-between border px-4 py-3.5 transition-colors ${selectedZoneId === zone.id ? "border-[#6c5e06] bg-[#f0ede8]" : "border-[#cdc6b3]/50 hover:bg-[#f0ede8]/50"}`}>
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="_zone" value={zone.id} checked={selectedZoneId === zone.id} onChange={() => setSelectedZoneId(zone.id)} className="accent-[#6c5e06]" />
+                          <div>
+                            <p className="text-sm font-medium text-[#1a1c1b]">{zone.name}</p>
+                            {zone.type === "FIXED" && zone.regions && <p className="text-xs text-[#5f5e5e]">{zone.regions}</p>}
+                            {zone.type === "COURIER" && <p className="text-xs text-[#5f5e5e]">Courier delivery to your address</p>}
+                          </div>
                         </div>
-                      </div>
-                      {zone.fee != null
-                        ? <span className="text-sm font-medium tabular-nums text-[#1a1c1b]">₵{Number(zone.fee).toFixed(2)}</span>
-                        : <span className="text-xs text-[#5f5e5e]">Price varies</span>}
-                    </label>
-                  ))}
+                        {zone.fee != null
+                          ? <span className="text-sm font-medium tabular-nums text-[#1a1c1b]">₵{Number(zone.fee).toFixed(2)}</span>
+                          : <span className="text-xs text-[#5f5e5e]">Price varies</span>}
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -219,7 +221,7 @@ export function SecondSightCheckoutContent({ tenant, deliveryZones, smsEnabled }
               <span className="text-xs font-semibold uppercase tracking-wider text-[#1a1c1b]">Total</span>
               <span className="text-2xl font-bold tabular-nums text-[#1a1c1b]" style={{ fontFamily: "var(--font-noto-serif)" }}>₵{total.toFixed(2)}</span>
             </div>
-            <button type="submit" disabled={isPending || !selectedZoneId} className="mt-8 flex w-full items-center justify-center bg-[#6c5e06] py-4 text-sm font-medium tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50">
+            <button type="submit" disabled={isPending || (deliveryZones.length > 0 && !selectedZoneId)} className="mt-8 flex w-full items-center justify-center bg-[#6c5e06] py-4 text-sm font-medium tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50">
               {isPending ? "PROCESSING..." : `PAY ₵${total.toFixed(2)}`}
             </button>
             <Link href="/cart" className="mt-4 flex w-full items-center justify-center border border-[#cdc6b3]/60 py-3.5 text-xs font-medium tracking-wider text-[#1a1c1b] transition-colors hover:bg-[#f9f9f7]">
