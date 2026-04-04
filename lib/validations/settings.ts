@@ -18,3 +18,15 @@ export const paymentSettingsSchema = z.object({
 export const subaccountCodeSchema = z.object({
   paystackSubaccountCode: z.string().max(100).optional().or(z.literal("")),
 });
+
+export const customDomainSchema = z.object({
+  customDomain: z
+    .string()
+    .max(253)
+    .regex(
+      /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i,
+      "Enter a valid domain without https:// (e.g., shop.mystore.com)",
+    )
+    .optional()
+    .or(z.literal("")),
+});

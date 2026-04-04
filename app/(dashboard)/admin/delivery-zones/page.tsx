@@ -17,7 +17,10 @@ export default async function DeliveryZonesPage() {
         title="Delivery"
         description="Choose how your store delivers orders to customers"
       />
-      <DeliveryZonesList zones={JSON.parse(JSON.stringify(zones))} />
+      <DeliveryZonesList
+        zones={JSON.parse(JSON.stringify(zones))}
+        deliveryMode={(tenant.deliveryMode as "FIXED" | "COURIER") ?? "FIXED"}
+      />
     </div>
   );
 }

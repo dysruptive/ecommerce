@@ -31,18 +31,6 @@ export async function createDeliveryZone(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    // Enforce mutual exclusivity: can't mix COURIER and FIXED zones
-    const existingType = await prisma.deliveryZone.findFirst({
-      where: { tenantId },
-      select: { type: true },
-    });
-    if (existingType && existingType.type !== parsed.data.type) {
-      return {
-        success: false,
-        error: `You already have ${existingType.type === "COURIER" ? "courier" : "fixed"} delivery options. Remove them first before switching to a different method.`,
-      };
-    }
-
     const maxPosition = await prisma.deliveryZone.aggregate({
       where: { tenantId },
       _max: { position: true },
@@ -133,6 +121,23 @@ export async function reorderDeliveryZones(
   } catch (error) {
     console.error("reorderDeliveryZones error:", error);
     return { success: false, error: "Failed to reorder zones." };
+  }
+}
+
+export async function updateDeliveryMode(
+  mode: "FIXED" | "COURIER",
+): Promise<ActionResult> {
+  try {
+    const tenantId = await getTenantId();
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { deliveryMode: mode },
+    });
+    revalidatePath("/admin/delivery-zones");
+    return { success: true };
+  } catch (error) {
+    console.error("updateDeliveryMode error:", error);
+    return { success: false, error: "Failed to update delivery mode." };
   }
 }
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useActionState } from "react";
 import Image from "next/image";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { updateGeneralSettings, updateLogoUrl } from "@/actions/settings";
+import { updateGeneralSettings, updateLogoUrl, updateFaviconUrl } from "@/actions/settings";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import type { Tenant } from "@/types";
 
@@ -15,6 +15,8 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
   const [state, formAction, isPending] = useActionState(updateGeneralSettings, null);
   const [logoUrl, setLogoUrl] = useState(tenant.logoUrl ?? "");
   const [logoUploading, setLogoUploading] = useState(false);
+  const [faviconUrl, setFaviconUrl] = useState(tenant.faviconUrl ?? "");
+  const [faviconUploading, setFaviconUploading] = useState(false);
 
   useEffect(() => {
     if (!state) return;
@@ -43,6 +45,30 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
   async function removeLogo() {
     setLogoUrl("");
     const result = await updateLogoUrl("");
+    if (!result.success) toast.error(result.error);
+  }
+
+  async function handleFaviconChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFaviconUploading(true);
+    try {
+      const result = await uploadToCloudinary(file, `stores/${tenant.slug}/favicon`);
+      setFaviconUrl(result.secure_url);
+      const saveResult = await updateFaviconUrl(result.secure_url);
+      if (!saveResult.success) toast.error(saveResult.error);
+      else toast.success("Favicon updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Favicon upload failed.");
+    } finally {
+      setFaviconUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function removeFavicon() {
+    setFaviconUrl("");
+    const result = await updateFaviconUrl("");
     if (!result.success) toast.error(result.error);
   }
 
@@ -80,6 +106,37 @@ export function GeneralForm({ tenant }: { tenant: Tenant }) {
                   {logoUploading ? "Uploading..." : "Upload logo"}
                 </span>
                 <input type="file" accept="image/*" className="hidden" disabled={logoUploading} onChange={handleLogoChange} />
+              </label>
+            </div>
+          </div>
+
+          {/* Favicon */}
+          <div className="space-y-2">
+            <label className={labelCls}>Favicon</label>
+            <p className="text-xs text-[#78716C]">Shown in browser tabs. Use a square image (32×32 or 64×64px).</p>
+            <div className="flex items-center gap-4">
+              {faviconUrl ? (
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#E5E2DB] bg-[#F8F7F4]">
+                  <Image src={faviconUrl} alt="Favicon" fill className="object-contain p-1" sizes="40px" />
+                  <button
+                    type="button"
+                    onClick={removeFavicon}
+                    className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-white shadow"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#E5E2DB] bg-[#F8F7F4] text-xs text-[#A8A29E]">
+                  None
+                </div>
+              )}
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-2 rounded-lg border border-[#E5E2DB] bg-white px-3 py-2 text-sm font-medium text-[#1C1917] hover:bg-[#F8F7F4]">
+                  {faviconUploading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {faviconUploading ? "Uploading..." : "Upload favicon"}
+                </span>
+                <input type="file" accept="image/*" className="hidden" disabled={faviconUploading} onChange={handleFaviconChange} />
               </label>
             </div>
           </div>

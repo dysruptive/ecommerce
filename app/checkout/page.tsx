@@ -7,8 +7,9 @@ import { CheckoutForm } from "./checkout-form";
 export default async function CheckoutPage() {
   const tenant = await getCurrentTenant();
 
+  const activeType = tenant.deliveryMode === "COURIER" ? "COURIER" : "FIXED";
   const deliveryZones = await prisma.deliveryZone.findMany({
-    where: { tenantId: tenant.id, isActive: true },
+    where: { tenantId: tenant.id, isActive: true, type: activeType },
     orderBy: { position: "asc" },
   });
 

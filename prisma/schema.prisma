@@ -71,6 +71,12 @@ model Tenant {
   emailEnabled           Boolean      @default(true)
   smsEnabled             Boolean      @default(false)
 
+  // Delivery
+  deliveryMode           String       @default("FIXED")
+
+  // Branding
+  faviconUrl             String?
+
   // Theme
   primaryColor           String       @default("#000000")
   accentColor            String       @default("#3B82F6")

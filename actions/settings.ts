@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import {
   generalSettingsSchema,
   paymentSettingsSchema,
+  customDomainSchema,
 } from "@/lib/validations/settings";
 import {
   resolveAccountNumber,
@@ -147,5 +148,55 @@ export async function updateLogoUrl(logoUrl: string): Promise<ActionResult> {
   } catch (error) {
     console.error("updateLogoUrl error:", error);
     return { success: false, error: "Failed to update logo." };
+  }
+}
+
+export async function updateFaviconUrl(faviconUrl: string): Promise<ActionResult> {
+  try {
+    const tenantId = await getTenantId();
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { faviconUrl: faviconUrl || null },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("updateFaviconUrl error:", error);
+    return { success: false, error: "Failed to update favicon." };
+  }
+}
+
+export async function updateCustomDomain(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    const tenantId = await getTenantId();
+    const parsed = customDomainSchema.safeParse({
+      customDomain: formData.get("customDomain"),
+    });
+
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const domain = parsed.data.customDomain || null;
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        customDomain: domain,
+        domainStatus: "UNVERIFIED",
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("updateCustomDomain error:", error);
+    if (
+      error instanceof Error &&
+      error.message.includes("Unique constraint")
+    ) {
+      return { success: false, error: "This domain is already in use by another store." };
+    }
+    return { success: false, error: "Failed to update custom domain." };
   }
 }

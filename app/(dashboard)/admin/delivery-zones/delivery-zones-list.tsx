@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, GripVertical, Truck, Bike } from "lucide-react";
+import { Plus, Trash2, Pencil, ArrowUp, ArrowDown, Truck, Bike } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,122 +16,277 @@ import {
   updateDeliveryZone,
   deleteDeliveryZone,
   reorderDeliveryZones,
+  updateDeliveryMode,
 } from "@/actions/delivery-zones";
 import { ZoneForm, type Zone } from "./zone-form";
 
-export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
+interface DeliveryZonesListProps {
+  zones: Zone[];
+  deliveryMode: "FIXED" | "COURIER";
+}
+
+export function DeliveryZonesList({ zones: initialZones, deliveryMode: initialMode }: DeliveryZonesListProps) {
+  const router = useRouter();
   const [zones, setZones] = useState(initialZones);
+  const [deliveryMode, setDeliveryMode] = useState(initialMode);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createType, setCreateType] = useState<"FIXED" | "COURIER">("FIXED");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSwitching, setIsSwitching] = useState(false);
 
-  const dragIndex = useRef<number | null>(null);
-
-  // Derive the current delivery method from existing zones
-  const currentType = zones.length > 0 ? zones[0].type : null;
-  const isCourierMode = currentType === "COURIER";
-
-  function handleDragStart(index: number) {
-    dragIndex.current = index;
+  // Sync local state when server data changes (after router.refresh())
+  const [prevInitial, setPrevInitial] = useState(initialZones);
+  if (initialZones !== prevInitial) {
+    setPrevInitial(initialZones);
+    setZones(initialZones);
   }
 
-  function handleDragEnter(index: number) {
-    if (dragIndex.current === null || dragIndex.current === index) return;
-    setZones((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(dragIndex.current!, 1);
-      next.splice(index, 0, moved);
-      dragIndex.current = index;
-      return next;
-    });
+  const fixedZones = zones.filter((z) => z.type === "FIXED");
+  const courierZones = zones.filter((z) => z.type === "COURIER");
+
+  async function handleSwitchMode(mode: "FIXED" | "COURIER") {
+    if (mode === deliveryMode) return;
+    setIsSwitching(true);
+    const result = await updateDeliveryMode(mode);
+    setIsSwitching(false);
+    if (result.success) {
+      setDeliveryMode(mode);
+      toast.success(`Switched to ${mode === "FIXED" ? "fixed delivery zones" : "courier delivery"}.`);
+    } else {
+      toast.error(result.error);
+    }
   }
 
-  async function handleDragEnd() {
-    dragIndex.current = null;
-    const result = await reorderDeliveryZones(zones.map((z) => z.id));
-    if (!result.success) toast.error(result.error);
+  async function handleDelete(zone: Zone) {
+    if (!confirm(`Delete "${zone.name}"?`)) return;
+    setZones((prev) => prev.filter((z) => z.id !== zone.id));
+    const result = await deleteDeliveryZone(zone.id);
+    if (result.success) {
+      toast.success(`"${zone.name}" deleted.`);
+    } else {
+      toast.error(result.error);
+      router.refresh();
+    }
+  }
+
+  async function moveZone(zone: Zone, direction: "up" | "down") {
+    const sameType = zones.filter((z) => z.type === zone.type);
+    const index = sameType.findIndex((z) => z.id === zone.id);
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= sameType.length) return;
+
+    // Build new full zones array with swapped positions within this type
+    const newSameType = [...sameType];
+    [newSameType[index], newSameType[targetIndex]] = [newSameType[targetIndex], newSameType[index]];
+    const otherZones = zones.filter((z) => z.type !== zone.type);
+    const newZones = zone.type === "FIXED"
+      ? [...newSameType, ...otherZones]
+      : [...otherZones, ...newSameType];
+    setZones(newZones);
+
+    const result = await reorderDeliveryZones(newZones.map((z) => z.id));
+    if (!result.success) {
+      toast.error(result.error);
+      setZones(zones);
+    }
+  }
+
+  function openCreate(type: "FIXED" | "COURIER") {
+    setCreateType(type);
+    setCreateOpen(true);
   }
 
   return (
-    <div className="space-y-4">
-      {/* Mode banner */}
-      {currentType && (
-        <div className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm ${
-          isCourierMode
-            ? "border-blue-200 bg-blue-50 text-blue-800"
-            : "border-emerald-200 bg-emerald-50 text-emerald-800"
-        }`}>
-          {isCourierMode ? (
-            <Bike className="h-4 w-4 shrink-0" />
-          ) : (
+    <div className="space-y-6">
+      {/* Mode toggle */}
+      <div className="rounded-xl border border-[#E5E2DB] bg-white p-4">
+        <p className="mb-3 text-sm font-medium text-[#1C1917]">Active delivery method at checkout</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleSwitchMode("FIXED")}
+            disabled={isSwitching}
+            className={`flex flex-1 items-center gap-2.5 rounded-lg border p-3 text-left text-sm transition-colors disabled:opacity-60 ${
+              deliveryMode === "FIXED"
+                ? "border-[#B45309] bg-[#FEF3C7] text-[#92400E]"
+                : "border-[#E5E2DB] bg-white text-[#78716C] hover:bg-[#F8F7F4]"
+            }`}
+          >
             <Truck className="h-4 w-4 shrink-0" />
-          )}
-          <span className="font-medium">
-            {isCourierMode ? "Courier delivery" : "Fixed delivery zones"}
-          </span>
-          <span className="text-xs opacity-70">
-            {isCourierMode
-              ? "Orders are delivered via Yango, Bolt, Uber or similar. Customers are quoted a price by the courier — you don't set a fee."
-              : "You have your own dispatch riders with fixed prices per area. Customers pay the delivery fee at checkout."}
-          </span>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="ml-auto">
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524]">
-                <Plus className="h-4 w-4" />
-                Add Option
-              </button>
-            </DialogTrigger>
-            <DialogContent className="border-[#E5E2DB] bg-white">
-              <DialogHeader>
-                <DialogTitle className="text-[#1C1917]">New Delivery Option</DialogTitle>
-              </DialogHeader>
-              <ZoneForm
-                lockedType={currentType ?? undefined}
-                action={createDeliveryZone}
-                onClose={() => setCreateOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+            <div>
+              <p className="font-medium">Fixed zones</p>
+              <p className="text-xs opacity-70">Your own riders, fixed prices per area</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleSwitchMode("COURIER")}
+            disabled={isSwitching}
+            className={`flex flex-1 items-center gap-2.5 rounded-lg border p-3 text-left text-sm transition-colors disabled:opacity-60 ${
+              deliveryMode === "COURIER"
+                ? "border-[#B45309] bg-[#FEF3C7] text-[#92400E]"
+                : "border-[#E5E2DB] bg-white text-[#78716C] hover:bg-[#F8F7F4]"
+            }`}
+          >
+            <Bike className="h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Courier</p>
+              <p className="text-xs opacity-70">Yango, Bolt, Uber — price varies</p>
+            </div>
+          </button>
         </div>
       </div>
 
+      {/* Fixed zones */}
+      <ZoneSection
+        title="Fixed Delivery Zones"
+        description="Regions with set delivery fees shown at checkout when using fixed mode."
+        type="FIXED"
+        zones={fixedZones}
+        isActive={deliveryMode === "FIXED"}
+        onAdd={() => openCreate("FIXED")}
+        onEdit={(id) => setEditingId(id)}
+        onMove={moveZone}
+        onDelete={handleDelete}
+        editingId={editingId}
+        onEditClose={() => {
+          setEditingId(null);
+          router.refresh();
+        }}
+      />
+
+      {/* Courier options */}
+      <ZoneSection
+        title="Courier Options"
+        description="Third-party delivery services shown at checkout when using courier mode."
+        type="COURIER"
+        zones={courierZones}
+        isActive={deliveryMode === "COURIER"}
+        onAdd={() => openCreate("COURIER")}
+        onEdit={(id) => setEditingId(id)}
+        onMove={moveZone}
+        onDelete={handleDelete}
+        editingId={editingId}
+        onEditClose={() => {
+          setEditingId(null);
+          router.refresh();
+        }}
+      />
+
+      {/* Create dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="border-[#E5E2DB] bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#1C1917]">
+              {createType === "FIXED" ? "New Delivery Zone" : "New Courier Option"}
+            </DialogTitle>
+          </DialogHeader>
+          <ZoneForm
+            lockedType={createType}
+            action={createDeliveryZone}
+            onClose={() => {
+              setCreateOpen(false);
+              router.refresh();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function ZoneSection({
+  title,
+  description,
+  type,
+  zones,
+  isActive,
+  onAdd,
+  onEdit,
+  onMove,
+  onDelete,
+  editingId,
+  onEditClose,
+}: {
+  title: string;
+  description: string;
+  type: "FIXED" | "COURIER";
+  zones: Zone[];
+  isActive: boolean;
+  onAdd: () => void;
+  onEdit: (id: string) => void;
+  onMove: (zone: Zone, direction: "up" | "down") => void;
+  onDelete: (zone: Zone) => void;
+  editingId: string | null;
+  onEditClose: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-[#1C1917]">{title}</p>
+          {isActive ? (
+            <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              Active
+            </span>
+          ) : (
+            <span className="inline-flex rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+              Inactive at checkout
+            </span>
+          )}
+        </div>
+        <button
+          onClick={onAdd}
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E5E2DB] bg-white px-3 text-xs font-medium text-[#1C1917] hover:bg-[#F8F7F4]"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add
+        </button>
+      </div>
+
       {zones.length === 0 ? (
-        <div className="rounded-xl border border-[#E5E2DB] bg-white p-10 text-center">
-          <p className="text-sm font-medium text-[#1C1917]">No delivery options yet</p>
-          <p className="mt-1 text-xs text-[#A8A29E]">
-            Add your first option to choose your delivery method.
+        <div className="rounded-xl border border-dashed border-[#E5E2DB] bg-white px-4 py-6 text-center">
+          <p className="text-xs text-[#A8A29E]">
+            {type === "FIXED"
+              ? "No fixed zones yet. Add zones with prices for different areas."
+              : "No courier options yet. Add Yango, Bolt, Uber etc."}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {!isCourierMode && (
-            <p className="text-xs text-[#A8A29E]">Drag to reorder — checkout displays options in this order.</p>
+          {type === "FIXED" && zones.length > 1 && (
+            <p className="text-xs text-[#A8A29E]">{description}</p>
           )}
           {zones.map((zone, index) => (
             <div
               key={zone.id}
-              draggable={!isCourierMode}
-              onDragStart={() => handleDragStart(index)}
-              onDragEnter={() => handleDragEnter(index)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-              className={`flex items-center gap-3 rounded-xl border border-[#E5E2DB] bg-white px-4 py-3.5 ${!isCourierMode ? "cursor-grab active:cursor-grabbing active:opacity-60" : ""}`}
+              className="flex items-center gap-3 rounded-xl border border-[#E5E2DB] bg-white px-4 py-3.5"
             >
-              {!isCourierMode && (
-                <GripVertical className="h-4 w-4 shrink-0 text-[#C8C4BD]" />
+              {type === "FIXED" && zones.length > 1 && (
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    onClick={() => onMove(zone, "up")}
+                    disabled={index === 0}
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#C8C4BD] hover:bg-[#F0EDE8] hover:text-[#78716C] disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move up"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onMove(zone, "down")}
+                    disabled={index === zones.length - 1}
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#C8C4BD] hover:bg-[#F0EDE8] hover:text-[#78716C] disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move down"
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               )}
 
               <div className="min-w-0 flex-1 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  {isCourierMode ? (
-                    <Bike className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
-                  ) : (
-                    <Truck className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
-                  )}
+                  {type === "COURIER"
+                    ? <Bike className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+                    : <Truck className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+                  }
                   <span className="text-sm font-medium text-[#1C1917]">{zone.name}</span>
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${zone.isActive ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"}`}>
                     {zone.isActive ? "Active" : "Inactive"}
@@ -148,7 +304,7 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
                   </span>
                 )}
 
-                <Dialog open={editingId === zone.id} onOpenChange={(open) => setEditingId(open ? zone.id : null)}>
+                <Dialog open={editingId === zone.id} onOpenChange={(open) => open ? onEdit(zone.id) : onEditClose()}>
                   <DialogTrigger asChild>
                     <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-[#F0EDE8] hover:text-[#1C1917]">
                       <Pencil className="h-3.5 w-3.5" />
@@ -162,20 +318,14 @@ export function DeliveryZonesList({ zones: initialZones }: { zones: Zone[] }) {
                       zone={zone}
                       lockedType={zone.type}
                       action={updateDeliveryZone.bind(null, zone.id)}
-                      onClose={() => setEditingId(null)}
+                      onClose={onEditClose}
                     />
                   </DialogContent>
                 </Dialog>
 
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A8A29E] hover:bg-red-50 hover:text-red-600"
-                  onClick={async () => {
-                    if (confirm(`Delete "${zone.name}"?`)) {
-                      const result = await deleteDeliveryZone(zone.id);
-                      if (!result.success) toast.error(result.error);
-                      else toast.success(`"${zone.name}" deleted.`);
-                    }
-                  }}
+                  onClick={() => onDelete(zone)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

@@ -30,7 +30,20 @@
       "Bash(find /Users/joel/Documents/ecommerce/app/\\\\\\(dashboard\\\\\\)/admin -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -exec wc -l {} +)",
       "Bash(sort -k2)",
       "Bash(find /Users/joel/Documents/ecommerce/components/dashboard -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -exec wc -l {} +)",
-      "Bash(npx shadcn@latest:*)"
+      "Bash(npx shadcn@latest:*)",
+      "WebFetch(domain:paystack.com)",
+      "WebFetch(domain:developers.paystack.co)",
+      "WebSearch",
+      "WebFetch(domain:support2.paystack.com)",
+      "WebFetch(domain:blog.faciotech.com)",
+      "WebFetch(domain:pilot-connect.d111ulzzlm5kvf.amplifyapp.com)",
+      "WebFetch(domain:support.paystack.com)",
+      "WebFetch(domain:paystackease.readthedocs.io)",
+      "WebFetch(domain:docs-v1.paystack.com)",
+      "WebFetch(domain:hexdocs.pm)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(item['name'], item['download_url']\\) for item in data if isinstance\\(data, list\\)]\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(item['name']\\) for item in data if 'subaccount' in item['name'].lower\\(\\) or 'split' in item['name'].lower\\(\\) or 'bank' in item['name'].lower\\(\\) or 'transfer' in item['name'].lower\\(\\)]\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(item['name']\\) for item in data if 'ubaccount' in item['name'] or 'split' in item['name'].lower\\(\\)]\")"
     ]
   }
 }
