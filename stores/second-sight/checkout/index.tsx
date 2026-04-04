@@ -5,6 +5,8 @@ import { SecondSightCheckoutContent } from "./checkout-content";
 import type { DeliveryZoneData } from "@/stores/registry";
 
 export function SecondSightCheckoutPage({ tenant, deliveryZones }: { tenant: Tenant; deliveryZones: DeliveryZoneData[] }) {
+  const smsEnabled = !!process.env.ARKESEL_API_KEY;
+
   return (
     <SecondSightFontProvider>
       <StoreLayout tenant={tenant}>
@@ -16,7 +18,7 @@ export function SecondSightCheckoutPage({ tenant, deliveryZones }: { tenant: Ten
             >
               Checkout
             </h1>
-            <SecondSightCheckoutContent tenant={tenant} deliveryZones={deliveryZones} />
+            <SecondSightCheckoutContent tenant={tenant} deliveryZones={deliveryZones} smsEnabled={smsEnabled} />
           </div>
         </div>
       </StoreLayout>

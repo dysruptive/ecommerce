@@ -12,7 +12,7 @@ const inputCls =
 const labelCls = "mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#5f5e5e]";
 const sectionHeadingCls = "mb-6 text-xs font-semibold uppercase tracking-widest text-[#5f5e5e]";
 
-export function SecondSightCheckoutContent({ tenant, deliveryZones }: { tenant: Tenant; deliveryZones: DeliveryZoneData[] }) {
+export function SecondSightCheckoutContent({ tenant, deliveryZones, smsEnabled }: { tenant: Tenant; deliveryZones: DeliveryZoneData[]; smsEnabled: boolean }) {
   const { items, total: subtotal, clearCart } = useCart();
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [discountCode, setDiscountCode] = useState("");
@@ -158,11 +158,11 @@ export function SecondSightCheckoutContent({ tenant, deliveryZones }: { tenant: 
           </div>
 
           {/* Notifications */}
-          {(tenant.smsEnabled || tenant.emailEnabled) && (
+          {(smsEnabled || tenant.emailEnabled) && (
             <div>
               <p className={sectionHeadingCls}>Order Updates</p>
               <div className="space-y-3">
-                {tenant.smsEnabled && (
+                {smsEnabled && (
                   <label className="flex cursor-pointer items-center gap-3">
                     <input type="checkbox" name="notifyBySMS" defaultChecked className="accent-[#6c5e06]" />
                     <div>
